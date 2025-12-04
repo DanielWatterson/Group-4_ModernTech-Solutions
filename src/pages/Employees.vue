@@ -1,3 +1,6 @@
+/* This employee page will display a list of employees within the business and their positions. */
+/* This file imports data from a .json file called employees.json */
+
 <template>
   <div>
     <h2>Employees Page</h2>

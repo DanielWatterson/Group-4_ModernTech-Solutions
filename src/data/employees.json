@@ -1,7 +1,0 @@
-[
-  { "id": 1, "name": "Sarah Miller", "position": "Software Developer" },
-  { "id": 2, "name": "John Wilkins", "position": "Technician" },
-  { "id": 3, "name": "Carol White", "position": "Designer" },
-  { "id": 4, "name": "Mark Davis", "position": "Manager" },
-  { "id": 5, "name": "Emily Johnson", "position": "Software Developer" }
-]

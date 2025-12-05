@@ -3,25 +3,32 @@
 
 <template>
   <div>
-    <h2>Employees Page</h2>
-    <p>This is the employees page.</p>
-  </div>
+    <h2>Employees</h2>
 
-  <div>
-    <ul class="list-group">
-    <li v-for="employee in employees" :key="employee.id" class="list-group-item">
-        {{ employee.name }} - {{ employee.position }}
-    </li>
+    <ul class="list-group mt-3">
+      <li
+        v-for="employee in employees"
+        :key="employee.employeeId"
+        class="list-group-item"
+      >
+        <strong>{{ employee.name }}</strong><br>
+        Position: {{ employee.position }}<br>
+        Department: {{ employee.department }}
+      </li>
     </ul>
   </div>
 </template>
 
 <script>
-import employees from '../data/employees.json';
+import employeeData from '../data/employee_info.json';
 
 export default {
+  name: "Employees",
+
   data() {
-    return { employees };
+    return {
+      employees: employeeData.employeeInformation
+    };
   }
-}
+};
 </script>

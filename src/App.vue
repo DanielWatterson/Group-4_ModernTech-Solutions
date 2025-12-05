@@ -7,6 +7,7 @@
       </div>
     </nav>
 
+  <!--- This section contains the sidebar and page content in a responsive layout - the row and columns --->
     <div class="container mt-4">
       <div class="row">
         <!-- Sidebar -->

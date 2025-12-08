@@ -9,7 +9,7 @@
   },
   {
     "id": 2,
-    "employeeId": 3,
+    "employeeId": 2,
     "employeeName": "Thabo Molefe",
     "department": "QA",
     "score": 74,
@@ -17,18 +17,66 @@
   },
   {
     "id": 3,
-    "employeeId": 7,
+    "employeeId": 3,
     "employeeName": "Naledi Moeketsi",
     "department": "IT",
     "score": 91,
     "status": "Excellent"
   },
-    {
+  {
     "id": 4,
+    "employeeId": 4,
+    "employeeName":"Keshav Naidoo",
+    "department": "Sales",
+    "score": 80,
+    "status": "Excellent"    
+  },
+  {
+    "id": 5,
+    "employeeId": 5,
+    "employeeName":"Zanele Khumalo",
+    "department": "Marketing",
+    "score": 76,
+    "status":"Good"     
+  },
+  {
+    "id": 6,
+    "employeeId": 6,
+    "employeeName":"Sipho Zulu",
+    "department": "Design",
+    "score": 84,
+    "status": "Excellent"   
+  },
+  {
+    "id": 7,
     "employeeId": 7,
-    "employeeName": "Naledi Moeketsi",
+    "employeeName":"Naledi Moeketsi",
     "department": "IT",
-    "score": 91,
-    "status": "Excellent"
+    "score": 89,
+    "status":"Excellent"   
+  },
+  {
+    "id": 8,
+    "employeeId": 8,
+    "employeeName":"farai Gumbo",
+    "department": "Marketing",
+    "score": 67,
+    "status":"Average"     
+  },
+  {
+    "id": 9,
+    "employeeId": 9,
+    "employeeName":"Karabo Dlamini",
+    "department": "Finance",
+    "score": 71,
+    "status":"Good"     
+  },
+  {
+    "id": 10,
+    "employeeId": 10,
+    "employeeName":"fatima Patel",
+    "department": "Support",
+    "score":71 ,
+    "status": "Good"   
   }
 ]

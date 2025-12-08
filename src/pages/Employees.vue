@@ -76,7 +76,7 @@
 </template>
 
 <script>
-import employeeData from "../data/employee_info.json";
+import employeeData from "@/data/employee_info.json";
 
 export default {
   name: "Employees",

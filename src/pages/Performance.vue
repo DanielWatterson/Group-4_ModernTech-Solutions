@@ -42,14 +42,15 @@
 </template>
 
 <script>
-import reviews from "../data/performance.json"; // Add file later
+import performanceJSON from "../data/performance_info.json";
 
 export default {
   name: "Performance",
   data() {
     return {
-      reviews: reviews || []
+      reviews: performanceJSON   // ← This is the correct value
     };
   }
 };
 </script>
+

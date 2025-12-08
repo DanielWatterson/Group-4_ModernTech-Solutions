@@ -50,7 +50,7 @@
 
 <script>
 import employeesJSON from "../data/employee_info.json";
-import performanceJSON from "../data/performance.json";
+import performanceJSON from "../data/performance_info.json";
 
 export default {
   name: "Dashboard",

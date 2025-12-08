@@ -95,22 +95,23 @@
 </template>
 
 <script>
-// IMPORTANT: Replace with actual path in your project structure
+// NOTE: These imports assume your environment (like Vite/Webpack) handles importing JSON files as modules.
+// Update the path: e.g., '@/data/employee_info.json'
 import employeeInfoJSON from '@/data/employee_info.json'; 
 import payrollDataJSON from '@/data/payroll_data.json'; 
 
-// Constant representing the average number of working days in a month (e.g., 22 days)
 const AVERAGE_WORKING_DAYS_MONTH = 22; 
 
 export default {
   name: "Payroll",
   data() {
     return {
+      // The initial data is created by merging the imported JSON data
       initialData: this.mergePayrollData(), 
       employeesWithPayData: [],
       showPayslipModal: false,
       selectedPayslip: null,
-      taxRate: 0.25, // Simplified 25% for taxes/deductions
+      taxRate: 0.25, 
     };
   },
   computed: {
@@ -126,14 +127,15 @@ export default {
      * Centralizes data from employee_info and payroll_data.
      */
     mergePayrollData() {
+      // Use the employeeInformation array from the imported JSON
       const employeeMap = employeeInfoJSON.employeeInformation.reduce((map, emp) => {
         map[emp.employeeId] = emp;
         return map;
       }, {});
-
+      
+      // Use the payrollData array from the imported JSON
       return payrollDataJSON.payrollData.map(payrollItem => {
         const info = employeeMap[payrollItem.employeeId];
-        // Calculate Daily Rate based on Monthly Salary for leave deduction costing
         const dailyRate = info.salary / AVERAGE_WORKING_DAYS_MONTH; 
 
         return {
@@ -157,16 +159,9 @@ export default {
         const monthlySalary = emp.salary;
         const dailyRate = emp.dailyRate; 
         
-        // 1. Calculate cost of deducted leave
         const leaveCost = dailyRate * emp.leaveDeductions;
-        
-        // 2. Gross Pay AFTER Leave Deduction (Base monthly salary minus cost of unpaid/deducted leave)
         const grossPayAfterLeave = monthlySalary - leaveCost;
-
-        // 3. Tax/Statutory Deduction Calculation
         const taxes = grossPayAfterLeave * this.taxRate;
-
-        // 4. Final Net Pay Calculation
         const netPay = grossPayAfterLeave - taxes;
 
         return {
@@ -196,7 +191,6 @@ export default {
 </script>
 
 <style scoped>
-/* Basic CSS for the modal backdrop to correctly display the Bootstrap modal */
 .modal-backdrop {
     position: fixed;
     top: 0;

@@ -95,8 +95,7 @@
 </template>
 
 <script>
-// NOTE: These imports assume your environment (like Vite/Webpack) handles importing JSON files as modules.
-// Update the path: e.g., '@/data/employee_info.json'
+// Retrieves the employee information and payroll data while also merging them
 import employeeInfoJSON from '@/data/employee_info.json'; 
 import payrollDataJSON from '@/data/payroll_data.json'; 
 
@@ -127,7 +126,7 @@ export default {
      * Centralizes data from employee_info and payroll_data.
      */
     mergePayrollData() {
-      // Use the employeeInformation array from the imported JSON
+      // Function to Use the employeeInformation array from the imported JSON
       const employeeMap = employeeInfoJSON.employeeInformation.reduce((map, emp) => {
         map[emp.employeeId] = emp;
         return map;
@@ -152,13 +151,15 @@ export default {
     },
 
     /**
-     * Simulates the automated payroll calculation process.
+     * Simulates the payroll calculation process for all employees.
+     * Updates the netPay, grossPayAfterLeave, leaveCost, and taxes fields for each employee.
+     * Sets the isCalculated flag to true for each employee.
+     * Alerts the user with a success message after the simulation is complete.
      */
     runPayrollSimulation() {
       this.employeesWithPayData = this.employeesWithPayData.map(emp => {
         const monthlySalary = emp.salary;
-        const dailyRate = emp.dailyRate; 
-        
+        const dailyRate = emp.dailyRate;
         const leaveCost = dailyRate * emp.leaveDeductions;
         const grossPayAfterLeave = monthlySalary - leaveCost;
         const taxes = grossPayAfterLeave * this.taxRate;

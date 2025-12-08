@@ -9,7 +9,7 @@
       No performance reviews available yet.
     </div>
 
-    <!-- Review Cards (once we add them) -->
+    <!-- Review Cards for employees -->
     <div class="row mt-4">
       <div class="col-md-4" v-for="review in reviews" :key="review.id">
         <div class="card shadow-sm mb-4">
@@ -48,7 +48,7 @@ export default {
   name: "Performance",
   data() {
     return {
-      reviews: performanceJSON   // ← This is the correct value
+      reviews: performanceJSON   
     };
   }
 };

@@ -14,7 +14,7 @@
       </div>
     </div>
 
-    <!-- PERFORMANCE SNAPSHOT -->
+    <!-- PERFORMANCE SNAPSHOT section -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <h5>Performance Snapshot</h5>
@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <!-- EMPLOYEES BY DEPARTMENT -->
+    <!-- EMPLOYEES BY DEPARTMENT - Section -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <h5>Employees by Department</h5>
@@ -55,6 +55,17 @@ import performanceJSON from "../data/performance_info.json";
 export default {
   name: "Dashboard",
 
+  /**
+   * Returns an object containing dashboard data.
+   *
+   * @property {Array} employees - Employee information from employee_info.json
+   * @property {Array} performance - Performance information from performance_info.json
+   * @property {Array} kpis - Dashboard KPIs
+   * @property {Object} kpis[0] - Total employees
+   * @property {Object} kpis[1] - Departments
+   * @property {Object} kpis[2] - Average performance score
+   * @property {Object} kpis[3] - Top performer score
+   */
   data() {
     return {
       employees: employeesJSON.employeeInformation,
@@ -70,7 +81,7 @@ export default {
   },
 
   computed: {
-    // Count employees per department
+    // Count employees per department, as an object
     deptCounts() {
       const counts = {};
       this.employees.forEach(e => {
@@ -79,13 +90,13 @@ export default {
       return counts;
     },
 
-    // Average performance score
+    // Average performance score caclulated among all employees
     averageScore() {
       const scores = this.performance.map(p => p.score);
       return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
     },
 
-    // Best performer
+    // Best performer - Not really explainable
     topPerformer() {
       return this.performance.reduce((best, p) =>
         p.score > best.score ? p : best
@@ -94,7 +105,7 @@ export default {
   },
 
   mounted() {
-    // Fill KPI card values
+    // Fill KPI card values with data
     this.kpis[0].value = this.employees.length;
     this.kpis[1].value = Object.keys(this.deptCounts).length;
     this.kpis[2].value = this.averageScore;

@@ -1,54 +1,64 @@
 <template>
-  <div class="home-page p-6 bg-gray-100 min-h-screen">
+  <div class="home-page container py-5">
 
-    <!-- Header / Welcome -->
-    <div class="text-center mb-6">
-      <h1 class="text-3xl font-bold">Welcome, {{ user.name }}</h1>
-      <p class="text-gray-600">Here’s a quick overview before you dive into the dashboard</p>
+    <!-- HEADER -->
+    <div class="text-center mb-5">
+      <h1 class="fw-bold">Welcome, {{ user.name }}</h1>
+      <p class="text-muted">Your HR overview and quick access panel</p>
     </div>
 
-    <!-- Profile Card -->
-    <div class="profile-card bg-white shadow-md rounded-xl p-6 flex flex-col md:flex-row items-center gap-6 mb-6 max-w-4xl mx-auto">
-      <img :src="user.avatar" alt="Profile" class="w-24 h-24 rounded-full object-cover">
-      <div class="flex-1">
-        <h2 class="text-xl font-semibold">{{ user.name }}</h2>
-        <p class="text-gray-500">{{ user.role }} | {{ user.department }}</p>
-        <p class="text-gray-600 mt-2">{{ user.email }}</p>
-      </div>
-      <div class="flex flex-col gap-2">
-        <router-link to="/dashboard" class="btn btn-primary">Go to Dashboard</router-link>
-      </div>
-    </div>
+    <!-- PROFILE CARD -->
+    <div class="card profile-card mb-5 shadow-sm mx-auto">
+      <div class="card-body d-flex flex-column flex-md-row align-items-center">
+        <img :src="user.avatar" alt="Profile" class="profile-img me-md-4 mb-3 mb-md-0">
 
-    <!-- Quick HR Stats -->
-    <div class="stats-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto mb-6">
-      <div class="stat-card bg-white shadow rounded-xl p-4 text-center">
-        <p class="text-gray-500">Total Employees</p>
-        <h3 class="text-2xl font-bold">{{ totalEmployees }}</h3>
-      </div>
-      <div class="stat-card bg-white shadow rounded-xl p-4 text-center">
-        <p class="text-gray-500">Departments</p>
-        <h3 class="text-2xl font-bold">{{ totalDepartments }}</h3>
-      </div>
-      <div class="stat-card bg-white shadow rounded-xl p-4 text-center">
-        <p class="text-gray-500">Recent Joiners</p>
-        <h3 class="text-2xl font-bold">{{ recentJoiners.length }}</h3>
-      </div>
-      <div class="stat-card bg-white shadow rounded-xl p-4 text-center">
-        <p class="text-gray-500">Pending Tasks</p>
-        <h3 class="text-2xl font-bold">{{ pendingTasks }}</h3>
+        <div class="flex-grow-1">
+          <h4 class="fw-semibold mb-1">{{ user.name }}</h4>
+          <p class="text-muted mb-1">{{ user.role }} — {{ user.department }}</p>
+          <p class="text-secondary">{{ user.email }}</p>
+        </div>
+
+        <router-link to="/dashboard" class="btn btn-primary px-4">
+          Go to Dashboard
+        </router-link>
       </div>
     </div>
 
-    <!-- Recent Joiners List -->
-    <div class="recent-activity bg-white shadow-md rounded-xl p-6 max-w-6xl mx-auto">
-      <h3 class="text-xl font-semibold mb-4">Recently Joined Employees</h3>
-      <ul class="flex flex-col gap-3">
-        <li v-for="employee in recentJoiners" :key="employee.employeeId" class="flex justify-between items-center border-b border-gray-200 pb-2">
-          <p>{{ employee.name }} - {{ employee.position }}</p>
-          <span class="text-gray-400 text-sm">{{ employee.department }}</span>
-        </li>
-      </ul>
+    <!-- STAT CARDS -->
+    <div class="row g-4 mb-5">
+      <div class="col-6 col-md-3" v-for="card in statCards" :key="card.label">
+        <div class="card stat-card text-center shadow-sm">
+          <div class="card-body">
+            <p class="text-muted small mb-1">{{ card.label }}</p>
+            <h3 class="fw-bold">{{ card.value }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT JOINERS -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="fw-semibold mb-3">Recently Joined Employees</h5>
+
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between align-items-center"
+              v-for="employee in recentJoiners"
+              :key="employee.employeeId">
+
+            <span>
+              <strong>{{ employee.name }}</strong>
+              <span class="text-muted">— {{ employee.position }}</span>
+            </span>
+
+            <span class="badge bg-light text-dark border">
+              {{ employee.department }}
+            </span>
+
+          </li>
+        </ul>
+
+      </div>
     </div>
 
   </div>
@@ -60,24 +70,66 @@ import employeeInfo from "../data/employee_info.json";
 
 const user = userData;
 
-// Total employees
+// Stats
 const totalEmployees = employeeInfo.employeeInformation.length;
+const totalDepartments = new Set(
+  employeeInfo.employeeInformation.map(e => e.department)
+).size;
 
-// Total unique departments
-const totalDepartments = new Set(employeeInfo.employeeInformation.map(e => e.department)).size;
-
-// Recent joiners (last 3 by employmentHistory date string — simple demo)
 const recentJoiners = employeeInfo.employeeInformation.slice(-3);
 
-// Pending tasks (placeholder for now)
 const pendingTasks = 5;
+
+const statCards = [
+  { label: "Total Employees", value: totalEmployees },
+  { label: "Departments", value: totalDepartments },
+  { label: "Recent Joiners", value: recentJoiners.length },
+  { label: "Pending Tasks", value: pendingTasks }
+];
 </script>
 
 <style scoped>
 .home-page {
   font-family: 'Inter', sans-serif;
 }
-.btn {
-  @apply px-4 py-2 rounded-lg text-white bg-blue-500 hover:bg-blue-600;
+
+/* Profile */
+.profile-card {
+  max-width: 850px;
+  border-radius: 15px;
+}
+
+.profile-img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Stat cards */
+.stat-card {
+  border-radius: 12px;
+  transition: 0.2s ease;
+  background: #ffffff;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+/* Recent joiners list */
+.list-group-item {
+  padding: 12px 10px;
+  font-size: 15px;
+}
+
+.list-group-item strong {
+  font-weight: 600;
+}
+
+/* Global card enhancements */
+.card {
+  border-radius: 12px;
 }
 </style>

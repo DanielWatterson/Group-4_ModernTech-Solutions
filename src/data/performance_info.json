@@ -22,5 +22,13 @@
     "department": "IT",
     "score": 91,
     "status": "Excellent"
+  },
+    {
+    "id": 4,
+    "employeeId": 7,
+    "employeeName": "Naledi Moeketsi",
+    "department": "IT",
+    "score": 91,
+    "status": "Excellent"
   }
 ]

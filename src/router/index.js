@@ -26,17 +26,20 @@ const router = createRouter({
   routes,
 });
 
-// -----------------------------
-// 🔐 Route Guard (Protect Pages)
-// -----------------------------
+// this router guard protects the pages
+
 router.beforeEach((to, from, next) => {
   const isLoggedIn = localStorage.getItem("loggedIn");
 
   if (to.meta.requiresAuth && !isLoggedIn) {
     next('/login');
+  } else if (to.path === '/login' && isLoggedIn) {
+    // If already logged in, prevent going back to login
+    next('/home');
   } else {
     next();
   }
 });
+
 
 export default router;

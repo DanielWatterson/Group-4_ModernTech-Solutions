@@ -1,7 +1,42 @@
-{
-  "name": "Dominic Peck",
-  "role": "HR Manager",
-  "department": "Human Resources",
-  "email": "dominic.peck@moderntech.com",
-  "avatar": "https://i.postimg.cc/DZYhx5QF/Womens_Glasses_500x580.jpg"
-}
+[
+  {
+    "name": "Serena McCoy",
+    "role": "HR Manager",
+    "department": "Human Resources",
+    "email": "SerenaMC@moderntech.com",
+    "avatar": "https://i.postimg.cc/DZYhx5QF/Womens_Glasses_500x580.jpg",
+    "password": "admin123"
+  },
+  {
+    "name": "Mbenki Moyo",
+    "role": "HR Manager",
+    "department": "Head Administration",
+    "email": "mbenkiMoyo02@moderntech.com",
+    "avatar": "https://i.postimg.cc/KvX8FsKG/a-black-man-with-glasses-and-a-beard-photo.jpg",
+    "password": "hollery123"
+  },
+    {
+    "name": "Matthew Anderson",
+    "role": "HR Manager",
+    "department": "Senior DevOps Engineer",
+    "email": "matthew.anderson@moderntech.com",
+    "avatar": "https://i.postimg.cc/5yrvN5C4/happy-middle-aged-professional-business-600nw-2454390621.webp",
+    "password": "oldman321123"
+  },
+    {
+    "name": "Emily Ling",
+    "role": "HR Manager",
+    "department": "Human Resources",
+    "email": "EmiLing@moderntech.com",
+    "avatar": "https://i.postimg.cc/tJcPCdx9/istockphoto-1496615764-612x612.jpg",
+    "password": "superkitty@02"
+  },
+    {
+    "name": "Samuel Jacobs",
+    "role": "HR Manager",
+    "department": "Human Resources",
+    "email": "JacobsSam@moderntech.com",
+    "avatar": "https://i.postimg.cc/L5Wf6k14/plp-mens-eyeglasses-sp-4761c649-2e90-4f54-ab41-79cdb90c3867.webp",
+    "password": "skateStar@2524"
+  }
+]

@@ -65,37 +65,34 @@
 </template>
 
 <script setup>
+import { reactive } from "vue";
 import employeeInfo from "../data/employee_info.json";
 
-// ----------------------------
-// ✅ Get logged-in user info
-// ----------------------------
-const user = {
+// reactive user object
+const user = reactive({
   name: localStorage.getItem("userName") || "Guest",
   role: localStorage.getItem("userRole") || "",
   department: localStorage.getItem("userDepartment") || "",
   email: localStorage.getItem("userEmail") || "",
   avatar: localStorage.getItem("userAvatar") || "https://via.placeholder.com/100"
-};
+});
 
-// ----------------------------
-// Stats
-// ----------------------------
+// update user when login occurs
+window.addEventListener("userChanged", () => {
+  user.name = localStorage.getItem("userName") || "Guest";
+  user.role = localStorage.getItem("userRole") || "";
+  user.department = localStorage.getItem("userDepartment") || "";
+  user.email = localStorage.getItem("userEmail") || "";
+  user.avatar = localStorage.getItem("userAvatar") || "https://via.placeholder.com/100";
+});
+
+// stats setup
 const employees = employeeInfo.employeeInformation;
-
-// Total employees
 const totalEmployees = employees.length;
-
-// Count unique departments
 const totalDepartments = new Set(employees.map(e => e.department)).size;
-
-// Recent joiners (last 3 employees)
 const recentJoiners = employees.slice(-3);
-
-// Example: pending tasks
 const pendingTasks = 5;
 
-// Stat cards array
 const statCards = [
   { label: "Total Employees", value: totalEmployees },
   { label: "Departments", value: totalDepartments },
@@ -103,6 +100,7 @@ const statCards = [
   { label: "Pending Tasks", value: pendingTasks }
 ];
 </script>
+
 
 <style scoped>
 .home-page {

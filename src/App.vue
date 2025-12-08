@@ -67,18 +67,19 @@ const showSidebar = ref(false);
 const isDesktop = ref(true);
 const isLoginPage = computed(() => route.path === "/login");
 
-// User info from localStorage is retrieved
-const userName = computed(() => localStorage.getItem("userName") || "");
-const userAvatar = computed(() => localStorage.getItem("userAvatar") || "");
+// Make user info reactive
+const userName = ref(localStorage.getItem("userName") || "");
+const userAvatar = ref(localStorage.getItem("userAvatar") || "");
 
-onMounted(() => {
-  // Detect screen size
-  handleResize();
-  window.addEventListener("resize", handleResize);
-
-  // Load user info from localStorage
+// Listen for login events
+window.addEventListener("userChanged", () => {
   userName.value = localStorage.getItem("userName") || "";
   userAvatar.value = localStorage.getItem("userAvatar") || "";
+});
+
+onMounted(() => {
+  handleResize();
+  window.addEventListener("resize", handleResize);
 });
 
 function handleResize() {
@@ -90,17 +91,13 @@ function toggleSidebar() {
   showSidebar.value = !showSidebar.value;
 }
 
-// Logout function
 function logout() {
-  localStorage.removeItem("loggedIn");
-  localStorage.removeItem("userName");
-  localStorage.removeItem("userEmail");
-  localStorage.removeItem("userRole");
-  localStorage.removeItem("userDepartment");
-  localStorage.removeItem("userAvatar");
-
+  localStorage.clear();
+  userName.value = "";
+  userAvatar.value = "";
   router.push("/login");
 }
+
 
 </script>
 <style scoped>

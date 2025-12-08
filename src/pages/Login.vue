@@ -44,9 +44,14 @@ function login() {
     localStorage.setItem("userDepartment", user.department);
     localStorage.setItem("userEmail", user.email);
     localStorage.setItem("userAvatar", user.avatar);
+
+    // 🔹 Notify other components that the user changed
+    window.dispatchEvent(new Event("userChanged"));
+
     router.push("/home");
   } else {
     error.value = "Invalid email or password.";
   }
 }
+
 </script>

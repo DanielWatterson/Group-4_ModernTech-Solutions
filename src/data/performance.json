@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "employeeId": 1,
+    "employeeName": "Sibongile Nkosi",
+    "department": "Development",
+    "score": 88,
+    "status": "Excellent"
+  },
+  {
+    "id": 2,
+    "employeeId": 3,
+    "employeeName": "Thabo Molefe",
+    "department": "QA",
+    "score": 74,
+    "status": "Good"
+  },
+  {
+    "id": 3,
+    "employeeId": 7,
+    "employeeName": "Naledi Moeketsi",
+    "department": "IT",
+    "score": 91,
+    "status": "Excellent"
+  }
+]

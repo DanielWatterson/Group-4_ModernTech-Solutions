@@ -15,7 +15,7 @@
         {
             "employeeId": 3,
             "hoursWorked": 170,
-            "leaveDeductions": 4,
+            "leaveDeductions": 4, 
             "finalSalary": 54800
         },
         {

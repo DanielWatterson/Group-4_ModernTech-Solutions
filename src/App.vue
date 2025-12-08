@@ -68,8 +68,8 @@ const isDesktop = ref(true);
 const isLoginPage = computed(() => route.path === "/login");
 
 // User info from localStorage is retrieved
-const userName = ref("");
-const userAvatar = ref("");
+const userName = computed(() => localStorage.getItem("userName") || "");
+const userAvatar = computed(() => localStorage.getItem("userAvatar") || "");
 
 onMounted(() => {
   // Detect screen size

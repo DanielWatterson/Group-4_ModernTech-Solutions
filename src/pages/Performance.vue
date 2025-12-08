@@ -1,42 +1,55 @@
 <template>
-  <div>
-    <h2>Performance Reviews</h2>
+  <div class="container mt-4">
+    <h2 class="mb-3">Employee Performance Reviews</h2>
+    <p class="text-muted">
+      Track employee performance, review periods, and feedback from managers.
+    </p>
 
-    <ul class="list-group mt-3">
-      <li
-        v-for="employee in employees"
-        :key="employee.id"
-        class="list-group-item"
-      >
-        <strong>{{ employee.employeeName }}</strong><br>
-        Department: {{ employee.department }}<br>
-        Score: {{ employee.score }}<br>
-        Status: <span :class="getStatusClass(employee.status)">
-          {{ employee.status }}
-        </span>
-      </li>
-    </ul>
+    <div v-if="reviews.length === 0" class="alert alert-info mt-4">
+      No performance reviews available yet.
+    </div>
+
+    <!-- Review Cards (once we add them) -->
+    <div class="row mt-4">
+      <div class="col-md-4" v-for="review in reviews" :key="review.id">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title">{{ review.employeeName }}</h5>
+            <p class="text-muted">{{ review.department }}</p>
+
+            <div class="d-flex justify-content-between">
+              <span><strong>Score:</strong></span>
+              <span>{{ review.score }}</span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <span><strong>Status:</strong></span>
+              <span>{{ review.status }}</span>
+            </div>
+
+            <router-link
+              :to="`/performance/${review.id}`"
+              class="btn btn-primary btn-sm mt-3"
+            >
+              View Details
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script>
-import performanceData from "../data/performance_info.json";
+import reviews from "../data/performance.json"; // Add file later
 
 export default {
   name: "Performance",
-
   data() {
     return {
-      employees: performanceData
+      reviews: reviews || []
     };
-  },
-
-  methods: {
-    getStatusClass(status) {
-      if (status === "Excellent") return "text-success fw-bold";
-      if (status === "Good") return "text-primary fw-bold";
-      return "text-muted";
-    }
   }
 };
 </script>

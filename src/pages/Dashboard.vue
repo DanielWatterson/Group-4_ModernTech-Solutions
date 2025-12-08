@@ -1,35 +1,46 @@
 <template>
   <div class="dashboard p-3">
-    <h2 class="mb-4">Dashboard</h2>
+    <h2 class="mb-4">Dashboard Overview</h2>
 
-  <div class="row-mb-4">
-    <div class="col-md-3" v-for="card in kpis" :key="card-label">
-      <div class="card text-center shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">{{ card.label }}</h5>
-          <h2 class="card-text">{{ card.value }}</h2>
+    <!-- KPI CARDS -->
+    <div class="row mb-4">
+      <div class="col-md-3" v-for="kpi in kpis" :key="kpi.label">
+        <div class="card text-center shadow-sm">
+          <div class="card-body">
+            <h5>{{ kpi.label }}</h5>
+            <h2>{{ kpi.value }}</h2>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
+    <!-- PERFORMANCE SNAPSHOT -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
-        <h5>Employees by Department (Chart Coming Soon)</h5>
-        <div class="placeholder-glow">  
-          <div class="placeholder col-12" style="height: 150px;"></div>
-        </div>
+        <h5>Performance Snapshot</h5>
+        <ul class="list-group mt-3">
+
+          <li class="list-group-item">
+            <strong>Average Score:</strong> {{ averageScore }}
+          </li>
+
+          <li class="list-group-item">
+            <strong>Top Performer:</strong>
+            {{ topPerformer.employeeName }} ({{ topPerformer.score }})
+          </li>
+
+        </ul>
       </div>
     </div>
 
-    <div class="card-shadow-sm mb-4">
+    <!-- EMPLOYEES BY DEPARTMENT -->
+    <div class="card shadow-sm mb-4">
       <div class="card-body">
-        <h5>Recent Activity</h5>
+        <h5>Employees by Department</h5>
         <ul class="list-group mt-3">
-          <li v-for="entry in recentActivity" :key="entry.id" class="list-group-item">
-            {{ entry.message }} <br>
-          <small class="text-muted">{{ entry.time }}</small>
-          </li> 
+          <li v-for="(count, dept) in deptCounts" :key="dept" class="list-group-item">
+            {{ dept }} — {{ count }} employees
+          </li>
         </ul>
       </div>
     </div>
@@ -38,40 +49,56 @@
 </template>
 
 <script>
-import employeeData from "../data/employee_info.json";
-// import activityData from "../data/activity.json";
+import employeesJSON from "../data/employee_info.json";
+import performanceJSON from "../data/performance.json";
 
 export default {
   name: "Dashboard",
 
   data() {
     return {
-      employees: employeeData.employeeInformation,
-
-      // THIS PART NEEDS A activity.json FILE, PLACE HOLDER DATA IS HERE //
-      recentActivity: [
-        { id: 1, message: "Activity data not available yet.", time: "—" }
-      ],
+      employees: employeesJSON.employeeInformation,
+      performance: performanceJSON,
 
       kpis: [
         { label: "Total Employees", value: 0 },
-        { label: "On Leave Today", value: 0 },
-        { label: "Pending Requests", value: 5 },
-        { label: "New Hires This Month", value: 2 }
+        { label: "Departments", value: 0 },
+        { label: "Avg Performance Score", value: 0 },
+        { label: "Top Performer Score", value: 0 }
       ]
     };
   },
 
+  computed: {
+    // Count employees per department
+    deptCounts() {
+      const counts = {};
+      this.employees.forEach(e => {
+        counts[e.department] = (counts[e.department] || 0) + 1;
+      });
+      return counts;
+    },
+
+    // Average performance score
+    averageScore() {
+      const scores = this.performance.map(p => p.score);
+      return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    },
+
+    // Best performer
+    topPerformer() {
+      return this.performance.reduce((best, p) =>
+        p.score > best.score ? p : best
+      );
+    }
+  },
+
   mounted() {
-    // Dynamically fill KPI values
-    this.kpis[0].value = this.employees.length; // total staff
-    this.kpis[1].value = this.employees.filter(e => e.onLeaveToday).length;
+    // Fill KPI card values
+    this.kpis[0].value = this.employees.length;
+    this.kpis[1].value = Object.keys(this.deptCounts).length;
+    this.kpis[2].value = this.averageScore;
+    this.kpis[3].value = this.topPerformer.score;
   }
 };
 </script>
-
-<style scoped>
-.card {
-  border-radius: 10px;
-}
-</style>

@@ -9,13 +9,14 @@
 
     <!-- PROFILE CARD -->
     <div class="card profile-card mb-5 shadow-sm mx-auto">
-      <div class="card-body d-flex flex-column flex-md-row align-items-center">
-        <img :src="user.avatar" alt="Profile" class="profile-img me-md-4 mb-3 mb-md-0">
-
-        <div class="flex-grow-1">
-          <h4 class="fw-semibold mb-1">{{ user.name }}</h4>
-          <p class="text-muted mb-1">{{ user.role }} — {{ user.department }}</p>
-          <p class="text-secondary">{{ user.email }}</p>
+      <div class="card-body d-flex flex-column flex-md-row align-items-center justify-content-between">
+        <div class="d-flex align-items-center mb-3 mb-md-0">
+          <img :src="user.avatar" alt="Profile" class="profile-img me-3">
+          <div>
+            <h4 class="fw-semibold mb-1">{{ user.name }}</h4>
+            <p class="text-muted mb-0">{{ user.role }} — {{ user.department }}</p>
+            <p class="text-secondary mb-0">{{ user.email }}</p>
+          </div>
         </div>
 
         <router-link to="/dashboard" class="btn btn-primary px-4">
@@ -42,19 +43,18 @@
         <h5 class="fw-semibold mb-3">Recently Joined Employees</h5>
 
         <ul class="list-group list-group-flush">
-          <li class="list-group-item d-flex justify-content-between align-items-center"
-              v-for="employee in recentJoiners"
-              :key="employee.employeeId">
-
+          <li
+            class="list-group-item d-flex justify-content-between align-items-center"
+            v-for="employee in recentJoiners"
+            :key="employee.employeeId"
+          >
             <span>
               <strong>{{ employee.name }}</strong>
               <span class="text-muted">— {{ employee.position }}</span>
             </span>
-
             <span class="badge bg-light text-dark border">
               {{ employee.department }}
             </span>
-
           </li>
         </ul>
 
@@ -65,21 +65,37 @@
 </template>
 
 <script setup>
-import userData from "../data/user.json";
 import employeeInfo from "../data/employee_info.json";
 
-const user = userData;
+// ----------------------------
+// ✅ Get logged-in user info
+// ----------------------------
+const user = {
+  name: localStorage.getItem("userName") || "Guest",
+  role: localStorage.getItem("userRole") || "",
+  department: localStorage.getItem("userDepartment") || "",
+  email: localStorage.getItem("userEmail") || "",
+  avatar: localStorage.getItem("userAvatar") || "https://via.placeholder.com/100"
+};
 
+// ----------------------------
 // Stats
-const totalEmployees = employeeInfo.employeeInformation.length;
-const totalDepartments = new Set(
-  employeeInfo.employeeInformation.map(e => e.department)
-).size;
+// ----------------------------
+const employees = employeeInfo.employeeInformation;
 
-const recentJoiners = employeeInfo.employeeInformation.slice(-3);
+// Total employees
+const totalEmployees = employees.length;
 
+// Count unique departments
+const totalDepartments = new Set(employees.map(e => e.department)).size;
+
+// Recent joiners (last 3 employees)
+const recentJoiners = employees.slice(-3);
+
+// Example: pending tasks
 const pendingTasks = 5;
 
+// Stat cards array
 const statCards = [
   { label: "Total Employees", value: totalEmployees },
   { label: "Departments", value: totalDepartments },
@@ -93,9 +109,9 @@ const statCards = [
   font-family: 'Inter', sans-serif;
 }
 
-/* Profile */
+/* Profile Card */
 .profile-card {
-  max-width: 850px;
+  max-width: 900px;
   border-radius: 15px;
 }
 
@@ -109,8 +125,9 @@ const statCards = [
 /* Stat cards */
 .stat-card {
   border-radius: 12px;
-  transition: 0.2s ease;
+  transition: 0.3s ease;
   background: #ffffff;
+  cursor: default;
 }
 
 .stat-card:hover {
@@ -128,7 +145,7 @@ const statCards = [
   font-weight: 600;
 }
 
-/* Global card enhancements */
+/* Global cards */
 .card {
   border-radius: 12px;
 }

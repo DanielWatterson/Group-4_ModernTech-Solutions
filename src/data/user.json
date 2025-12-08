@@ -1,7 +1,18 @@
-{
-  "name": "Dominic Peck",
-  "role": "HR Manager",
-  "department": "Human Resources",
-  "email": "dominic.peck@moderntech.com",
-  "avatar": "https://i.postimg.cc/DZYhx5QF/Womens_Glasses_500x580.jpg"
-}
+[
+  {
+    "name": "Serena McCoy",
+    "role": "HR Manager",
+    "department": "Human Resources",
+    "email": "SerenaMC@moderntech.com",
+    "avatar": "https://i.postimg.cc/DZYhx5QF/Womens_Glasses_500x580.jpg",
+    "password": "admin123"
+  },
+  {
+    "name": "Mbenki Moyo",
+    "role": "HR Manager",
+    "department": "Head Administration",
+    "email": "mbenkiMoyo02@moderntech.com",
+    "avatar": "https://i.postimg.cc/KvX8FsKG/a-black-man-with-glasses-and-a-beard-photo.jpg",
+    "password": "hollery123"
+  }
+]

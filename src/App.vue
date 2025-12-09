@@ -65,7 +65,7 @@ const router = useRouter();
 
 const showSidebar = ref(false);
 const isDesktop = ref(true);
-const isLoginPage = computed(() => route.path === "/login");
+const isLoginPage = computed(() => route.path === "/" || route.path === "/login");
 
 // Make user info reactive
 const userName = ref(localStorage.getItem("userName") || "");

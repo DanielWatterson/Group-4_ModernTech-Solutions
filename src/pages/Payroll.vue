@@ -2,8 +2,9 @@
   <div class="container py-4">
     <h2>Payroll Processing Dashboard</h2>
     <p class="lead">
-      This interface demonstrates the automation of payroll calculations by centralizing employee and payroll data.
-      This fulfills the requirement for **automated payroll calculations** and **digital payslip generation**.
+      This interface demonstrates the automation of payroll calculations by centralizing employee
+      and payroll data. This fulfills the requirement for **automated payroll calculations** and
+      **digital payslip generation**.
     </p>
 
     <!-- Top buttons wrapper -->
@@ -11,11 +12,9 @@
       <button class="btn btn-success" @click="runPayrollSimulation" :disabled="allCalculated">
         <i class="bi bi-calculator-fill"></i> Run Payroll Simulation
       </button>
-      <button class="btn btn-outline-secondary" @click="resetPayroll">
-        Reset Payroll Data
-      </button>
+      <button class="btn btn-outline-secondary" @click="resetPayroll">Reset Payroll Data</button>
     </div>
-    
+
     <div class="table-responsive">
       <table class="table table-striped table-hover align-middle">
         <thead class="table-dark">
@@ -35,20 +34,25 @@
             <td>{{ employee.employeeId }}</td>
             <td>{{ employee.name }}</td>
             <td>{{ employee.position }}</td>
-            <td>R{{ employee.salary.toLocaleString('en-ZA') }}</td> 
+            <td>R{{ employee.salary.toLocaleString('en-ZA') }}</td>
             <td>{{ employee.hoursWorked || 0 }}</td>
             <td>{{ employee.leaveDeductions || 0 }}</td>
             <td class="text-end">
-              <span :class="{'fw-bold text-success': employee.isCalculated}">
-                {{ employee.isCalculated ? `R${employee.netPay.toLocaleString('en-ZA', {minimumFractionDigits: 2})}` : '—' }}
+              <span :class="{ 'fw-bold text-success': employee.isCalculated }">
+                {{
+                  employee.isCalculated
+                    ? `R${employee.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
+                    : '—'
+                }}
               </span>
             </td>
             <td>
-              <button 
-                class="btn btn-sm" 
-                :class="employee.isCalculated ? 'btn-info' : 'btn-outline-secondary'" 
-                :disabled="!employee.isCalculated" 
-                @click="viewPayslip(employee)">
+              <button
+                class="btn btn-sm"
+                :class="employee.isCalculated ? 'btn-info' : 'btn-outline-secondary'"
+                :disabled="!employee.isCalculated"
+                @click="viewPayslip(employee)"
+              >
                 <i class="bi bi-file-earmark-text"></i> View Payslip
               </button>
             </td>
@@ -64,7 +68,11 @@
           <div class="modal-content">
             <div class="modal-header bg-primary text-white">
               <h5 class="modal-title">Digital Payslip: {{ selectedPayslip.name }}</h5>
-              <button type="button" class="btn-close btn-close-white" @click="showPayslipModal = false"></button>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                @click="showPayslipModal = false"
+              ></button>
             </div>
             <div class="modal-body" v-if="selectedPayslip">
               <div class="row">
@@ -73,23 +81,53 @@
                   <p><strong>Position:</strong> {{ selectedPayslip.position }}</p>
                 </div>
                 <div class="col-md-6 text-end">
-                  <p><strong>Monthly Salary (Gross Base):</strong> R{{ selectedPayslip.salary.toLocaleString('en-ZA') }}</p>
-                  <p><strong>Gross Pay (Before Tax):</strong> R{{ selectedPayslip.grossPayAfterLeave.toLocaleString('en-ZA', {minimumFractionDigits: 2}) }}</p>
+                  <p>
+                    <strong>Monthly Salary (Gross Base):</strong> R{{
+                      selectedPayslip.salary.toLocaleString('en-ZA')
+                    }}
+                  </p>
+                  <p>
+                    <strong>Gross Pay (Before Tax):</strong> R{{
+                      selectedPayslip.grossPayAfterLeave.toLocaleString('en-ZA', {
+                        minimumFractionDigits: 2,
+                      })
+                    }}
+                  </p>
                 </div>
               </div>
-              <hr>
+              <hr />
               <h6>Deductions:</h6>
               <ul class="list-unstyled">
-                <li>Taxes ({{ (taxRate * 100).toFixed(0) }}%): 
-                  <span class="float-end text-danger">R{{ selectedPayslip.taxes.toLocaleString('en-ZA', {minimumFractionDigits: 2}) }}</span></li>
-                <li>Leave Deductions ({{ selectedPayslip.leaveDeductions }} days):
-                  <span class="float-end text-danger">R{{ selectedPayslip.leaveCost.toLocaleString('en-ZA', {minimumFractionDigits: 2}) }}</span></li>
+                <li>
+                  Taxes ({{ (taxRate * 100).toFixed(0) }}%):
+                  <span class="float-end text-danger"
+                    >R{{
+                      selectedPayslip.taxes.toLocaleString('en-ZA', { minimumFractionDigits: 2 })
+                    }}</span
+                  >
+                </li>
+                <li>
+                  Leave Deductions ({{ selectedPayslip.leaveDeductions }} days):
+                  <span class="float-end text-danger"
+                    >R{{
+                      selectedPayslip.leaveCost.toLocaleString('en-ZA', {
+                        minimumFractionDigits: 2,
+                      })
+                    }}</span
+                  >
+                </li>
               </ul>
-              <hr>
-              <h4 class="text-success text-center">Net Pay: R{{ selectedPayslip.netPay.toLocaleString('en-ZA', {minimumFractionDigits: 2}) }}</h4>
+              <hr />
+              <h4 class="text-success text-center">
+                Net Pay: R{{
+                  selectedPayslip.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 })
+                }}
+              </h4>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" @click="showPayslipModal = false">Close</button>
+              <button type="button" class="btn btn-secondary" @click="showPayslipModal = false">
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -99,61 +137,61 @@
 </template>
 
 <script>
-import employeeInfoJSON from '@/data/employee_info.json'; 
-import payrollDataJSON from '@/data/payroll_data.json'; 
+import employeeInfoJSON from '@/data/employee_info.json'
+import payrollDataJSON from '@/data/payroll_data.json'
 
-const AVERAGE_WORKING_DAYS_MONTH = 22; 
+const AVERAGE_WORKING_DAYS_MONTH = 22
 
 export default {
-  name: "Payroll",
+  name: 'Payroll',
   data() {
     return {
-      initialData: this.mergePayrollData(), 
+      initialData: this.mergePayrollData(),
       employeesWithPayData: [],
       showPayslipModal: false,
       selectedPayslip: null,
-      taxRate: 0.25, 
-    };
+      taxRate: 0.25,
+    }
   },
   computed: {
     allCalculated() {
-      return this.employeesWithPayData.every(emp => emp.isCalculated);
-    }
+      return this.employeesWithPayData.every((emp) => emp.isCalculated)
+    },
   },
   created() {
-    this.employeesWithPayData = JSON.parse(JSON.stringify(this.initialData));
+    this.employeesWithPayData = JSON.parse(JSON.stringify(this.initialData))
   },
   methods: {
     mergePayrollData() {
       const employeeMap = employeeInfoJSON.employeeInformation.reduce((map, emp) => {
-        map[emp.employeeId] = emp;
-        return map;
-      }, {});
-      
-      return payrollDataJSON.payrollData.map(payrollItem => {
-        const info = employeeMap[payrollItem.employeeId];
-        const dailyRate = info.salary / AVERAGE_WORKING_DAYS_MONTH; 
+        map[emp.employeeId] = emp
+        return map
+      }, {})
+
+      return payrollDataJSON.payrollData.map((payrollItem) => {
+        const info = employeeMap[payrollItem.employeeId]
+        const dailyRate = info.salary / AVERAGE_WORKING_DAYS_MONTH
 
         return {
-          ...info, 
-          ...payrollItem, 
+          ...info,
+          ...payrollItem,
           dailyRate: dailyRate,
           isCalculated: false,
           grossPayAfterLeave: 0,
           taxes: 0,
           leaveCost: 0,
           netPay: 0,
-        };
-      });
+        }
+      })
     },
     runPayrollSimulation() {
-      this.employeesWithPayData = this.employeesWithPayData.map(emp => {
-        const monthlySalary = emp.salary;
-        const dailyRate = emp.dailyRate;
-        const leaveCost = dailyRate * emp.leaveDeductions;
-        const grossPayAfterLeave = monthlySalary - leaveCost;
-        const taxes = grossPayAfterLeave * this.taxRate;
-        const netPay = grossPayAfterLeave - taxes;
+      this.employeesWithPayData = this.employeesWithPayData.map((emp) => {
+        const monthlySalary = emp.salary
+        const dailyRate = emp.dailyRate
+        const leaveCost = dailyRate * emp.leaveDeductions
+        const grossPayAfterLeave = monthlySalary - leaveCost
+        const taxes = grossPayAfterLeave * this.taxRate
+        const netPay = grossPayAfterLeave - taxes
 
         return {
           ...emp,
@@ -162,33 +200,33 @@ export default {
           leaveCost: leaveCost,
           netPay: netPay,
           isCalculated: true,
-        };
-      });
-      alert('Payroll calculation simulated successfully! Net Pay fields are now updated.');
+        }
+      })
+      alert('Payroll calculation simulated successfully! Net Pay fields are now updated.')
     },
     viewPayslip(employee) {
       if (employee.isCalculated) {
-        this.selectedPayslip = employee;
-        this.showPayslipModal = true;
+        this.selectedPayslip = employee
+        this.showPayslipModal = true
       }
     },
     resetPayroll() {
-      this.employeesWithPayData = JSON.parse(JSON.stringify(this.initialData));
-    }
-  }
+      this.employeesWithPayData = JSON.parse(JSON.stringify(this.initialData))
+    },
+  },
 }
 </script>
 
 <style scoped>
-/* Full page container with background image + gradient overlay */
 .container {
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
   padding-top: 60px;
   padding-bottom: 60px;
-  background: linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
-              url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop') 
-              center/cover no-repeat;
+  background:
+    linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
+    url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop')
+      center/cover no-repeat;
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -196,13 +234,17 @@ export default {
   animation: fadeIn 0.8s ease-out;
 }
 
-/* Fade-in animation */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Headers */
 h2 {
   color: #ffffff;
   font-weight: 700;
@@ -213,7 +255,6 @@ p.lead {
   margin-bottom: 1.5rem;
 }
 
-/* Top buttons wrapper */
 .top-buttons {
   display: flex;
   gap: 10px;
@@ -224,26 +265,24 @@ p.lead {
   font-size: 0.85rem;
   padding: 6px 14px;
   border-radius: 12px;
-  min-width: auto; /* Prevent full width */
+  min-width: auto;
   transition: 0.25s ease;
 }
 
 .top-buttons .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* ---------------- Glassy table styling ---------------- */
 .table-responsive {
   backdrop-filter: blur(15px);
-  background: rgba(24, 40, 72, 0.5); /* semi-transparent container */
+  background: rgba(24, 40, 72, 0.5);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
   padding: 10px;
 }
 
-/* Ensure table and rows inherit transparency */
 .table {
   width: 100%;
   border-collapse: separate;
@@ -255,31 +294,30 @@ p.lead {
 .table th,
 .table td {
   vertical-align: middle;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05); /* very light transparent overlay for glass effect */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   color: #fff;
   transition: background 0.25s ease;
 }
 
 .table th {
-  background: rgba(75, 108, 183, 0.6) !important; /* header semi-transparent blue */
+  background: rgba(75, 108, 183, 0.6) !important;
   font-weight: 600;
 }
 
-/* Striped rows with subtle glass effect */
 .table-striped tbody tr:nth-of-type(odd) {
-  background-color: rgba(255,255,255,0.03);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .table-hover tbody tr:hover {
-  background: rgba(255,255,255,0.1) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
   transform: translateX(2px);
   transition: 0.25s ease;
 }
 
 /* ---------------- Modal styling ---------------- */
 .modal-dialog {
-  margin: 80px auto; /* Adds 60px spacing from top */
+  margin: 80px auto;
 }
 .modal-backdrop {
   position: fixed;
@@ -296,7 +334,7 @@ p.lead {
   backdrop-filter: blur(15px);
   background: rgba(24, 40, 72, 0.5);
   color: #fff;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
 }
 
 .modal-header,
@@ -316,17 +354,17 @@ ul.list-unstyled li {
   color: #28a745 !important;
 }
 
-/* ---------------- Responsive adjustments ---------------- */
+/* Responsive adjustments  */
 @media (max-width: 768px) {
-  .table th, .table td {
+  .table th,
+  .table td {
     font-size: 0.85rem;
     padding: 0.45rem 0.6rem;
   }
-  
+
   .btn {
     font-size: 0.85rem;
     padding: 0.4rem 0.6rem;
   }
 }
 </style>
-

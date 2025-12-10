@@ -1,9 +1,6 @@
 <template>
   <div class="container mt-4">
     <h2 class="mb-3">Employee Performance Reviews</h2>
-    <p class="text-muted">
-      Track employee performance, review periods, and feedback from managers.
-    </p>
 
     <div v-if="reviews.length === 0" class="alert alert-info mt-4">
       No performance reviews available yet.
@@ -46,44 +43,43 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
 <script>
-import performanceJSON from "../data/performance_info.json";
-import Chart from "chart.js/auto";
+import performanceJSON from '../data/performance_info.json'
+import Chart from 'chart.js/auto'
 
 export default {
-  name: "Performance",
+  name: 'Performance',
   data() {
     return {
       reviews: performanceJSON,
       lineChart: null,
       doughnutChart: null,
-    };
+    }
   },
   mounted() {
-    this.renderCharts();
+    this.renderCharts()
   },
   methods: {
     renderCharts() {
       // --- Line chart for scores ---
-      const ctxLine = document.getElementById("scoreLineChart").getContext("2d");
+      const ctxLine = document.getElementById('scoreLineChart').getContext('2d')
       this.lineChart = new Chart(ctxLine, {
-        type: "line",
+        type: 'line',
         data: {
-          labels: this.reviews.map(r => r.employeeName),
+          labels: this.reviews.map((r) => r.employeeName),
           datasets: [
             {
-              label: "Score",
-              data: this.reviews.map(r => r.score),
-              borderColor: "#6c63ff",
-              backgroundColor: "rgba(108, 99, 255, 0.2)",
+              label: 'Score',
+              data: this.reviews.map((r) => r.score),
+              borderColor: '#6c63ff',
+              backgroundColor: 'rgba(108, 99, 255, 0.2)',
               fill: true,
               tension: 0.3,
-            }
-          ]
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -95,48 +91,48 @@ export default {
               min: 0,
               max: 100,
               ticks: { stepSize: 10 },
-            }
-          }
-        }
-      });
+            },
+          },
+        },
+      })
 
       // --- Doughnut chart for status distribution ---
       const statusCounts = this.reviews.reduce((acc, r) => {
-        acc[r.status] = (acc[r.status] || 0) + 1;
-        return acc;
-      }, {});
+        acc[r.status] = (acc[r.status] || 0) + 1
+        return acc
+      }, {})
 
-      const ctxDoughnut = document.getElementById("statusDoughnutChart").getContext("2d");
+      const ctxDoughnut = document.getElementById('statusDoughnutChart').getContext('2d')
       this.doughnutChart = new Chart(ctxDoughnut, {
-        type: "doughnut",
+        type: 'doughnut',
         data: {
           labels: Object.keys(statusCounts),
           datasets: [
             {
-              label: "Status Count",
+              label: 'Status Count',
               data: Object.values(statusCounts),
               backgroundColor: [
-                "#28a745", // Excellent
-                "#ffc107", // Good
-                "#fd7e14", // Average
-                "#dc3545"  // Poor
-              ]
-            }
-          ]
+                '#28a745', // Excellent
+                '#ffc107', // Good
+                '#fd7e14', // Average
+                '#dc3545', // Poor
+              ],
+            },
+          ],
         },
         options: {
           responsive: true,
           plugins: {
             legend: {
-              position: "bottom",
-              labels: { color: "#fff" }
-            }
-          }
-        }
-      });
-    }
-  }
-};
+              position: 'bottom',
+              labels: { color: '#fff' },
+            },
+          },
+        },
+      })
+    },
+  },
+}
 </script>
 
 <style scoped>
@@ -145,9 +141,10 @@ export default {
   min-height: 100vh;
   padding-top: 60px;
   padding-bottom: 60px;
-  background: linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
-              url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop') 
-              center/cover no-repeat;
+  background:
+    linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
+    url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop')
+      center/cover no-repeat;
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -181,7 +178,7 @@ p.text-muted {
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
   background: rgba(24, 40, 72, 0.6);
 }
 
@@ -190,7 +187,7 @@ p.text-muted {
 }
 
 .text-muted {
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* Responsive adjustments */

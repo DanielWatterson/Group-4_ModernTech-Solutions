@@ -5,7 +5,7 @@
         <i class="bi bi-briefcase-fill me-2"></i> ModernTech HR Portal
       </h1>
       <p class="intro-subtitle mb-5">HUMAN RESOURCES STUDIO</p>
-      
+
       <button class="btn btn-intro-primary" @click="goToLogin">
         Sign In to HR Portal <i class="bi bi-box-arrow-in-right ms-2"></i>
       </button>
@@ -13,12 +13,12 @@
 
     <!-- Loading Video Overlay -->
     <div v-if="showVideo" class="video-overlay d-flex justify-content-center align-items-center">
-      <video 
-        ref="loadingVideo" 
-        :src="videoSrc" 
-        autoplay 
-        muted 
-        playsinline 
+      <video
+        ref="loadingVideo"
+        :src="videoSrc"
+        autoplay
+        muted
+        playsinline
         @ended="videoEnded"
         class="loading-video"
       ></video>
@@ -27,30 +27,28 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import loadingVideoFile from "@/assets/Hailuo_Video_454780089505865728.mp4";
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import loadingVideoFile from '@/assets/Hailuo_Video_454780089505865728.mp4'
 
-const router = useRouter();
-const showVideo = ref(false);
-const videoSrc = loadingVideoFile;
+const router = useRouter()
+const showVideo = ref(false)
+const videoSrc = loadingVideoFile
 
 function goToLogin() {
-  showVideo.value = true;
+  showVideo.value = true
 
-  // Optional fallback: navigate after 8 seconds if video doesn't fire "ended"
   setTimeout(() => {
     if (showVideo.value) {
-      videoEnded();
+      videoEnded()
     }
-  }, 8000); // adjust based on video duration
+  }, 8000)
 }
 
 function videoEnded() {
-  router.push("/login");
+  router.push('/login')
 }
 </script>
-
 
 <style scoped>
 .intro-container {
@@ -73,7 +71,7 @@ function videoEnded() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.25);
+  background: rgba(0, 0, 0, 0.25);
   z-index: 2;
 }
 
@@ -85,37 +83,36 @@ function videoEnded() {
   padding: 3rem 2rem;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 20px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .content-box:hover {
   transform: translateY(-5px);
-  box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
 }
 
-/* Video Overlay */
-/* Video Overlay */
 .video-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: black;       /* black background behind video */
+  background: black;
   z-index: 9999;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Make the video fill full screen */
 .loading-video {
   width: 100%;
   height: 100%;
-  object-fit: cover;       /* ensures the video covers entire area without stretching */
+  object-fit: cover;
 }
 </style>

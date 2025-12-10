@@ -29,25 +29,28 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import loadingVideoFile from "@/assets/Hailuo_Video_454780089505865728.mp4";
 
 const router = useRouter();
 const showVideo = ref(false);
-const videoSrc = "https://hailuoai.video/share/ai-video/b1LaQQKq0qYQ?source-scene=shared&source-media=shared_link";
+const videoSrc = loadingVideoFile;
 
 function goToLogin() {
   showVideo.value = true;
 
-  // simulate 3-second loading
+  // Optional fallback: navigate after 8 seconds if video doesn't fire "ended"
   setTimeout(() => {
-    router.push("/login");
-  }, 3000);
+    if (showVideo.value) {
+      videoEnded();
+    }
+  }, 8000); // adjust based on video duration
 }
-
 
 function videoEnded() {
   router.push("/login");
 }
 </script>
+
 
 <style scoped>
 .intro-container {
@@ -95,19 +98,24 @@ function videoEnded() {
 }
 
 /* Video Overlay */
+/* Video Overlay */
 .video-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: black;
+  background: black;       /* black background behind video */
   z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
+/* Make the video fill full screen */
 .loading-video {
-  max-width: 80%;
-  max-height: 80%;
-  border-radius: 12px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;       /* ensures the video covers entire area without stretching */
 }
 </style>

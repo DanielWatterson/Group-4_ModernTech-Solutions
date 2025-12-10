@@ -54,3 +54,87 @@ export default {
 };
 </script>
 
+<style scoped>
+/* Full-page container with background image + gradient overlay */
+.container {
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding-top: 60px;
+  padding-bottom: 60px;
+  background: linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
+              url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop') 
+              center/cover no-repeat;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Headers */
+h2 {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+p.text-muted {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Review Cards */
+.card {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  transition: 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.card-title {
+  color: #fff;
+  font-weight: 600;
+}
+
+.text-muted {
+  color: rgba(255,255,255,0.7);
+}
+
+/* Buttons */
+.btn-primary {
+  background: #6c63ff;
+  border: none;
+  transition: 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: #5548c8;
+  transform: translateY(-2px);
+}
+
+/* Alerts */
+.alert-info {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-radius: 15px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card {
+    text-align: center;
+  }
+}
+</style>

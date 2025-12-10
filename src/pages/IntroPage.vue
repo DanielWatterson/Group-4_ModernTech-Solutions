@@ -29,25 +29,27 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import loadingVideoFile from "@/assets/Hailuo_Video_454780089505865728.mp4";
 
 const router = useRouter();
 const showVideo = ref(false);
-const videoSrc = "https://hailuoai.video/share/ai-video/b1LaQQKq0qYQ?source-scene=shared&source-media=shared_link";
+
+// use imported video file
+const videoSrc = loadingVideoFile;
 
 function goToLogin() {
   showVideo.value = true;
 
-  // simulate 3-second loading
-  setTimeout(() => {
-    router.push("/login");
-  }, 3000);
+  // Optional fallback: If video doesn't trigger "ended"
+  // router.push("/login") after the video duration
+  // setTimeout(() => router.push("/login"), 5000);  // adjust seconds
 }
-
 
 function videoEnded() {
   router.push("/login");
 }
 </script>
+
 
 <style scoped>
 .intro-container {

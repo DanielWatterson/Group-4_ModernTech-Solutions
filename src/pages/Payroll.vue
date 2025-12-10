@@ -192,13 +192,143 @@ export default {
 </script>
 
 <style scoped>
+/* Full page container with background image + gradient overlay */
+.container {
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding-top: 60px;
+  padding-bottom: 60px;
+  background: linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
+              url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop') 
+              center/cover no-repeat;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Headers */
+h2 {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+p.lead {
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 1.5rem;
+}
+
+/* Buttons */
+.btn-success, .btn-outline-secondary, .btn-info {
+  border-radius: 12px;
+  transition: 0.3s ease;
+}
+
+.btn-success:hover {
+  background: #5548c8;
+  transform: translateY(-2px);
+}
+
+.btn-outline-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.btn-info {
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+}
+
+.btn-info:hover {
+  background: #5548c8;
+}
+
+/* Glass card table effect */
+.table-responsive {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+.table {
+  color: #fff;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+  border: none;
+}
+
+.table-dark th {
+  background: rgba(108, 99, 255, 0.8);
+  color: #fff;
+}
+
+.table-hover tbody tr:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateX(2px);
+  transition: 0.25s ease;
+}
+
+/* Modal styling */
 .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1040;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+.modal-header {
+  border-bottom: none;
+}
+
+.modal-footer {
+  border-top: none;
+}
+
+/* Deduction list in modal */
+ul.list-unstyled li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+}
+
+/* Text highlights */
+.fw-bold.text-success {
+  color: #28a745 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .table th, .table td {
+    font-size: 0.85rem;
+    padding: 0.45rem 0.6rem;
+  }
+  
+  .btn {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+  }
 }
 </style>

@@ -237,13 +237,183 @@ export default {
 </script>
 
 <style scoped>
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1040;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
+/* Main container */
+.container {
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding: 60px 20px;
+  background: linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
+              url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') 
+              center/cover no-repeat;
+  color: #fff;
+}
+
+/* Page header */
+h2 {
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+p.lead {
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 30px;
+}
+
+/* Glassy card style */
+.card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  color: #fff;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  background: rgba(255,255,255,0.15);
+}
+
+/* Card headers */
+.card-header {
+  background: rgba(255,255,255,0.12) !important;
+  backdrop-filter: blur(12px);
+  color: #fff;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+/* List group items */
+.list-group-item {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  border: none;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.list-group-item:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateX(3px);
+}
+
+/* Badges */
+.badge {
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 12px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+  background: #6c63ff;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: #5548c8;
+}
+
+.btn-success {
+  background: #4caf50;
+  border: none;
+}
+
+.btn-danger {
+  background: #e57373;
+  border: none;
+}
+
+.btn-info {
+  background: #00bcd4;
+  border: none;
+}
+
+.btn-dark {
+  background: #333;
+  border: none;
+}
+
+.btn-outline-danger {
+  border-color: #e57373;
+  color: #e57373;
+}
+
+.btn-outline-danger:hover {
+  background: #e57373;
+  color: #fff;
+}
+
+/* Tables */
+.table {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+.table th {
+  color: #fff;
+}
+
+.table td {
+  color: rgba(255,255,255,0.85);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(255,255,255,0.02);
+}
+
+/* Scrollable list */
+.list-group {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Scrollbar styling for Webkit */
+.list-group::-webkit-scrollbar {
+  width: 8px;
+}
+
+.list-group::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 10px;
+}
+
+.list-group::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
+}
+
+/* Performance badges */
+.badge.bg-success {
+  background-color: #4caf50 !important;
+}
+
+.badge.bg-warning {
+  background-color: #ffb74d !important;
+  color: #000 !important;
+}
+
+.badge.bg-secondary {
+  background-color: #aaa !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .row > .col-lg-5,
+  .row > .col-lg-7 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
 }
 </style>

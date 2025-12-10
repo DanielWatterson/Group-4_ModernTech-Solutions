@@ -133,3 +133,98 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+/* Employees page container */
+.container {
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding: 60px 20px;
+  background: linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
+              url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') 
+              center/cover no-repeat;
+  color: #fff;
+}
+
+/* Page Header */
+h2.fw-bold {
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+/* Filters */
+.form-control, .form-select {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  transition: 0.3s ease;
+}
+
+.form-control::placeholder {
+  color: rgba(255,255,255,0.7);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: rgba(255,255,255,0.15);
+  border-color: #6c63ff;
+  color: #fff;
+  outline: none;
+  box-shadow: 0 0 10px rgba(108, 99, 255, 0.4);
+}
+
+/* Employee Cards */
+.hover-card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  background: rgba(255,255,255,0.15);
+}
+
+/* Employee card text */
+.hover-card h5 {
+  color: #fff;
+}
+
+.hover-card p {
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 6px;
+}
+
+/* Badges */
+.badge {
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+/* Salary colors */
+.text-success {
+  color: #4caf50 !important;
+}
+
+.text-warning {
+  color: #ffb74d !important;
+}
+
+.text-danger {
+  color: #e57373 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .d-flex.gap-3 {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+</style>

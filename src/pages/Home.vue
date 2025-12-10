@@ -1,6 +1,5 @@
 <template>
-  <div class="home-page container py-5">
-
+  <div class="home-page py-5">
     <!-- HEADER -->
     <div class="text-center mb-5">
       <h1 class="fw-bold">Welcome, {{ user.name }}</h1>
@@ -9,9 +8,11 @@
 
     <!-- PROFILE CARD -->
     <div class="card profile-card mb-5 shadow-sm mx-auto">
-      <div class="card-body d-flex flex-column flex-md-row align-items-center justify-content-between">
+      <div
+        class="card-body d-flex flex-column flex-md-row align-items-center justify-content-between"
+      >
         <div class="d-flex align-items-center mb-3 mb-md-0">
-          <img :src="user.avatar" alt="Profile" class="profile-img me-3">
+          <img :src="user.avatar" alt="Profile" class="profile-img me-3" />
           <div>
             <h4 class="fw-semibold mb-1">{{ user.name }}</h4>
             <p class="text-muted mb-0">{{ user.role }} — {{ user.department }}</p>
@@ -19,9 +20,7 @@
           </div>
         </div>
 
-        <router-link to="/dashboard" class="btn btn-primary px-4">
-          Go to Dashboard
-        </router-link>
+        <router-link to="/dashboard" class="btn btn-primary px-4"> Go to Dashboard </router-link>
       </div>
     </div>
 
@@ -57,94 +56,215 @@
             </span>
           </li>
         </ul>
-
       </div>
     </div>
-
   </div>
 </template>
 
 <script setup>
-import { reactive } from "vue";
-import employeeInfo from "../data/employee_info.json";
+import { reactive } from 'vue'
+import employeeInfo from '../data/employee_info.json'
 
 // reactive user object
 const user = reactive({
-  name: localStorage.getItem("userName") || "Guest",
-  role: localStorage.getItem("userRole") || "",
-  department: localStorage.getItem("userDepartment") || "",
-  email: localStorage.getItem("userEmail") || "",
-  avatar: localStorage.getItem("userAvatar") || "https://via.placeholder.com/100"
-});
+  name: localStorage.getItem('userName') || 'Guest',
+  role: localStorage.getItem('userRole') || '',
+  department: localStorage.getItem('userDepartment') || '',
+  email: localStorage.getItem('userEmail') || '',
+  avatar: localStorage.getItem('userAvatar') || 'https://via.placeholder.com/100',
+})
 
 // update user when login occurs
-window.addEventListener("userChanged", () => {
-  user.name = localStorage.getItem("userName") || "Guest";
-  user.role = localStorage.getItem("userRole") || "";
-  user.department = localStorage.getItem("userDepartment") || "";
-  user.email = localStorage.getItem("userEmail") || "";
-  user.avatar = localStorage.getItem("userAvatar") || "https://via.placeholder.com/100";
-});
+window.addEventListener('userChanged', () => {
+  user.name = localStorage.getItem('userName') || 'Guest'
+  user.role = localStorage.getItem('userRole') || ''
+  user.department = localStorage.getItem('userDepartment') || ''
+  user.email = localStorage.getItem('userEmail') || ''
+  user.avatar = localStorage.getItem('userAvatar') || 'https://via.placeholder.com/100'
+})
 
 // stats setup
-const employees = employeeInfo.employeeInformation;
-const totalEmployees = employees.length;
-const totalDepartments = new Set(employees.map(e => e.department)).size;
-const recentJoiners = employees.slice(-3);
-const pendingTasks = 5;
+const employees = employeeInfo.employeeInformation
+const totalEmployees = employees.length
+const totalDepartments = new Set(employees.map((e) => e.department)).size
+const recentJoiners = employees.slice(-3)
+const pendingTasks = 5
 
 const statCards = [
-  { label: "Total Employees", value: totalEmployees },
-  { label: "Departments", value: totalDepartments },
-  { label: "Recent Joiners", value: recentJoiners.length },
-  { label: "Pending Tasks", value: pendingTasks }
-];
+  { label: 'Total Employees', value: totalEmployees },
+  { label: 'Departments', value: totalDepartments },
+  { label: 'Recent Joiners', value: recentJoiners.length },
+  { label: 'Pending Tasks', value: pendingTasks },
+]
 </script>
 
-
 <style scoped>
+/* Home page main container */
 .home-page {
   font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding-top: 60px;
+  padding-bottom: 60px;
+
+  /* Full background image with gradient overlay */
+  background:
+    linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
+    url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')
+      center/cover no-repeat;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  animation: fadeIn 0.8s ease-out;
 }
 
-/* Profile Card */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-page h1,
+.home-page h4 {
+  color: #ffffff;
+}
+
+.home-page p {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  transition: 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Profile card */
 .profile-card {
   max-width: 900px;
-  border-radius: 15px;
+  margin: 0 auto;
+  padding: 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.profile-img {
-  width: 90px;
-  height: 90px;
+.profile-card .card-body {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.profile-card .d-flex {
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.profile-card .profile-img {
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
   object-fit: cover;
+  transition: 0.3s ease;
 }
 
-/* Stat cards */
+.profile-card .profile-img:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
 .stat-card {
-  border-radius: 12px;
-  transition: 0.3s ease;
-  background: #ffffff;
+  border-radius: 15px;
+  text-align: center;
+  padding: 25px 15px;
   cursor: default;
+  background: rgba(255, 255, 255, 0.08);
+  transition: 0.3s ease;
+}
+
+.stat-card h3 {
+  color: #fff;
+}
+
+.stat-card p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
 }
 
 .stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.15);
 }
 
-/* Recent joiners list */
 .list-group-item {
-  padding: 12px 10px;
-  font-size: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: none;
+  padding: 12px 16px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.25s ease;
+}
+
+.list-group-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(3px);
 }
 
 .list-group-item strong {
   font-weight: 600;
 }
 
-/* Global cards */
-.card {
-  border-radius: 12px;
+.badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 10px;
+  padding: 4px 10px;
+}
+
+/* Buttons */
+.btn-primary {
+  background: #6c63ff;
+  border: none;
+  transition: 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: #5548c8;
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profile-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-card .d-flex {
+    flex-direction: column;
+    gap: 15px;
+  }
 }
 </style>

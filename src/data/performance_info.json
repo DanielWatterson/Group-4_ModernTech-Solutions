@@ -58,7 +58,7 @@
   {
     "id": 8,
     "employeeId": 8,
-    "employeeName":"farai Gumbo",
+    "employeeName":"Farai Gumbo",
     "department": "Marketing",
     "score": 67,
     "status":"Average"     
@@ -74,7 +74,7 @@
   {
     "id": 10,
     "employeeId": 10,
-    "employeeName":"fatima Patel",
+    "employeeName":"Fatima Patel",
     "department": "Support",
     "score":71 ,
     "status": "Good"   

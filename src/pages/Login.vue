@@ -6,12 +6,12 @@
       <form @submit.prevent="login">
         <div class="mb-3">
           <label>Email</label>
-          <input v-model="email" type="email" class="form-control modern-input" required>
+          <input v-model="email" type="email" class="form-control modern-input" required />
         </div>
 
         <div class="mb-3">
           <label>Password</label>
-          <input v-model="password" type="password" class="form-control modern-input" required>
+          <input v-model="password" type="password" class="form-control modern-input" required />
         </div>
 
         <button type="submit" class="btn login-btn w-100">Login</button>
@@ -23,39 +23,35 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import usersData from "../data/user.json";
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import usersData from '../data/user.json'
 
-const router = useRouter();
-const email = ref("");
-const password = ref("");
-const error = ref("");
+const router = useRouter()
+const email = ref('')
+const password = ref('')
+const error = ref('')
 
 function login() {
-  const user = usersData.find(
-    u => u.email === email.value && u.password === password.value
-  );
+  const user = usersData.find((u) => u.email === email.value && u.password === password.value)
 
   if (user) {
-    localStorage.setItem("loggedIn", "true");
-    localStorage.setItem("userName", user.name);
-    localStorage.setItem("userRole", user.role);
-    localStorage.setItem("userDepartment", user.department);
-    localStorage.setItem("userEmail", user.email);
-    localStorage.setItem("userAvatar", user.avatar);
+    localStorage.setItem('loggedIn', 'true')
+    localStorage.setItem('userName', user.name)
+    localStorage.setItem('userRole', user.role)
+    localStorage.setItem('userDepartment', user.department)
+    localStorage.setItem('userEmail', user.email)
+    localStorage.setItem('userAvatar', user.avatar)
 
-    window.dispatchEvent(new Event("userChanged"));
-    router.push("/home");
+    window.dispatchEvent(new Event('userChanged'))
+    router.push('/home')
   } else {
-    error.value = "Invalid email or password.";
+    error.value = 'Invalid email or password.'
   }
 }
 </script>
 
 <style scoped>
-/* ------------------------- */
-/* 1. Background Container */
 /* ------------------------- */
 .login-container {
   position: absolute;
@@ -77,13 +73,10 @@ function login() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.35); /* dark overlay for readability */
+  background: rgba(0, 0, 0, 0.35);
   z-index: 2;
 }
 
-/* ------------------------- */
-/* 2. Glassmorphism Card */
-/* ------------------------- */
 .login-card {
   position: relative;
   z-index: 3;
@@ -92,55 +85,50 @@ function login() {
   padding: 3rem 2rem;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 20px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .login-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
 }
 
-/* ------------------------- */
-/* 3. Title Styling */
-/* ------------------------- */
 .login-title {
   font-size: 2rem;
   font-weight: 700;
   color: #fff;
   margin-bottom: 2rem;
-  text-shadow: 1px 1px 5px rgba(0,0,0,0.6);
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
 }
 
-/* ------------------------- */
-/* 4. Inputs Styling */
-/* ------------------------- */
+/* Inputs Styling */
 .modern-input {
   border-radius: 12px;
   padding: 12px 15px;
-  border: 1px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
   backdrop-filter: blur(6px);
   transition: 0.3s;
 }
 
 .modern-input::placeholder {
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .modern-input:focus {
   border-color: #3f51b5;
-  box-shadow: 0 0 0 3px rgba(63,81,181,0.3);
-  background: rgba(255,255,255,0.25);
+  box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.3);
+  background: rgba(255, 255, 255, 0.25);
   color: #fff;
 }
 
-/* ------------------------- */
-/* 5. Button Styling */
-/* ------------------------- */
+/* Button Styling */
 .login-btn {
   background-color: #3f51b5;
   border: none;
@@ -154,20 +142,16 @@ function login() {
 .login-btn:hover {
   background-color: #303f9f;
   transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(63,81,181,0.4);
+  box-shadow: 0 8px 20px rgba(63, 81, 181, 0.4);
 }
 
-/* ------------------------- */
-/* 6. Error Message */
-/* ------------------------- */
+/* Error Message */
 .text-danger {
   color: #ff6b6b;
   font-weight: 500;
 }
 
-/* ------------------------- */
-/* 7. Responsive Adjustments */
-/* ------------------------- */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
   .login-card {
     padding: 2.5rem 1.5rem;

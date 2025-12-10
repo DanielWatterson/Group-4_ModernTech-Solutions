@@ -9,7 +9,23 @@
       No performance reviews available yet.
     </div>
 
-    <!-- Review Cards for employees -->
+    <!-- Charts -->
+    <div class="charts row mt-4 mb-4">
+      <div class="col-md-6 mb-3">
+        <div class="card chart-card p-3">
+          <h5 class="mb-2">Performance Scores</h5>
+          <canvas id="scoreLineChart"></canvas>
+        </div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <div class="card chart-card p-3">
+          <h5 class="mb-2">Status Distribution</h5>
+          <canvas id="statusDoughnutChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Cards -->
     <div class="row mt-4">
       <div class="col-md-4" v-for="review in reviews" :key="review.id">
         <div class="card shadow-sm mb-4">
@@ -26,13 +42,6 @@
               <span><strong>Status:</strong></span>
               <span>{{ review.status }}</span>
             </div>
-
-            <router-link
-              :to="`/performance/${review.id}`"
-              class="btn btn-primary btn-sm mt-3"
-            >
-              View Details
-            </router-link>
           </div>
         </div>
       </div>
@@ -43,19 +52,94 @@
 
 <script>
 import performanceJSON from "../data/performance_info.json";
+import Chart from "chart.js/auto";
 
 export default {
   name: "Performance",
   data() {
     return {
-      reviews: performanceJSON   
+      reviews: performanceJSON,
+      lineChart: null,
+      doughnutChart: null,
     };
+  },
+  mounted() {
+    this.renderCharts();
+  },
+  methods: {
+    renderCharts() {
+      // --- Line chart for scores ---
+      const ctxLine = document.getElementById("scoreLineChart").getContext("2d");
+      this.lineChart = new Chart(ctxLine, {
+        type: "line",
+        data: {
+          labels: this.reviews.map(r => r.employeeName),
+          datasets: [
+            {
+              label: "Score",
+              data: this.reviews.map(r => r.score),
+              borderColor: "#6c63ff",
+              backgroundColor: "rgba(108, 99, 255, 0.2)",
+              fill: true,
+              tension: 0.3,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              ticks: { stepSize: 10 },
+            }
+          }
+        }
+      });
+
+      // --- Doughnut chart for status distribution ---
+      const statusCounts = this.reviews.reduce((acc, r) => {
+        acc[r.status] = (acc[r.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      const ctxDoughnut = document.getElementById("statusDoughnutChart").getContext("2d");
+      this.doughnutChart = new Chart(ctxDoughnut, {
+        type: "doughnut",
+        data: {
+          labels: Object.keys(statusCounts),
+          datasets: [
+            {
+              label: "Status Count",
+              data: Object.values(statusCounts),
+              backgroundColor: [
+                "#28a745", // Excellent
+                "#ffc107", // Good
+                "#fd7e14", // Average
+                "#dc3545"  // Poor
+              ]
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: "#fff" }
+            }
+          }
+        }
+      });
+    }
   }
 };
 </script>
 
 <style scoped>
-/* Full-page container with background image + gradient overlay */
 .container {
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
@@ -68,18 +152,9 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 30px;
-  animation: fadeIn 0.8s ease-out;
 }
 
-/* Fade-in animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Headers */
 h2 {
-  color: #ffffff;
   font-weight: 700;
 }
 
@@ -87,10 +162,18 @@ p.text-muted {
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* Charts cards */
+.chart-card {
+  border-radius: 20px;
+  background: rgba(24, 40, 72, 0.5);
+  backdrop-filter: blur(12px);
+  color: #fff;
+}
+
 /* Review Cards */
 .card {
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(24, 40, 72, 0.5);
   backdrop-filter: blur(12px);
   color: #fff;
   transition: 0.3s ease;
@@ -99,36 +182,15 @@ p.text-muted {
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 20px 40px rgba(0,0,0,0.25);
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(24, 40, 72, 0.6);
 }
 
 .card-title {
-  color: #fff;
   font-weight: 600;
 }
 
 .text-muted {
   color: rgba(255,255,255,0.7);
-}
-
-/* Buttons */
-.btn-primary {
-  background: #6c63ff;
-  border: none;
-  transition: 0.3s ease;
-}
-
-.btn-primary:hover {
-  background: #5548c8;
-  transform: translateY(-2px);
-}
-
-/* Alerts */
-.alert-info {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  border-radius: 15px;
-  border: 1px solid rgba(255,255,255,0.2);
 }
 
 /* Responsive adjustments */

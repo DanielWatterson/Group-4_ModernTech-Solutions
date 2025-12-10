@@ -1,5 +1,5 @@
 <template>
-  <div class="home-page container py-5">
+  <div class="home-page py-5">
 
     <!-- HEADER -->
     <div class="text-center mb-5">
@@ -63,6 +63,7 @@
 
   </div>
 </template>
+
 
 <script setup>
 import { reactive } from "vue";
@@ -154,12 +155,26 @@ const statCards = [
 
 /* Profile card */
 .profile-card {
-  max-width: 900px;
+  max-width: 900px; /* wider for longer text */
   margin: 0 auto;
-  padding: 20px 30px;
+  padding: 20px 40px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.profile-card .card-body {
+  display: flex;
+  flex-direction: row;         /* always row for desktop */
+  align-items: flex-start;     /* top-align profile image and text */
+  justify-content: space-between;
+  flex-wrap: wrap;             /* allows text to wrap without overlapping button */
+  gap: 20px;                   /* space between text block and button */
+}
+
+.profile-card .d-flex {
+  align-items: flex-start;     /* profile image and text aligned at top */
+  gap: 20px;                   /* space between image and text */
 }
 
 .profile-card .profile-img {

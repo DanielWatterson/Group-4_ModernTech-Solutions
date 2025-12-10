@@ -6,12 +6,15 @@
       This fulfills the requirement for **automated payroll calculations** and **digital payslip generation**.
     </p>
 
-    <button class="btn btn-success mb-3 me-3" @click="runPayrollSimulation" :disabled="allCalculated">
-      <i class="bi bi-calculator-fill"></i> Run Payroll Simulation (Calculate Net Pay)
-    </button>
-    <button class="btn btn-outline-secondary mb-3" @click="resetPayroll">
-      Reset Payroll Data
-    </button>
+    <!-- Top buttons wrapper -->
+    <div class="top-buttons">
+      <button class="btn btn-success" @click="runPayrollSimulation" :disabled="allCalculated">
+        <i class="bi bi-calculator-fill"></i> Run Payroll Simulation
+      </button>
+      <button class="btn btn-outline-secondary" @click="resetPayroll">
+        Reset Payroll Data
+      </button>
+    </div>
     
     <div class="table-responsive">
       <table class="table table-striped table-hover align-middle">
@@ -54,6 +57,7 @@
       </table>
     </div>
 
+    <!-- Payslip Modal -->
     <div v-if="showPayslipModal" class="modal-backdrop">
       <div class="modal d-block" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -95,7 +99,6 @@
 </template>
 
 <script>
-// Retrieves the employee information and payroll data while also merging them
 import employeeInfoJSON from '@/data/employee_info.json'; 
 import payrollDataJSON from '@/data/payroll_data.json'; 
 
@@ -105,7 +108,6 @@ export default {
   name: "Payroll",
   data() {
     return {
-      // The initial data is created by merging the imported JSON data
       initialData: this.mergePayrollData(), 
       employeesWithPayData: [],
       showPayslipModal: false,
@@ -122,17 +124,12 @@ export default {
     this.employeesWithPayData = JSON.parse(JSON.stringify(this.initialData));
   },
   methods: {
-    /**
-     * Centralizes data from employee_info and payroll_data.
-     */
     mergePayrollData() {
-      // Function to Use the employeeInformation array from the imported JSON
       const employeeMap = employeeInfoJSON.employeeInformation.reduce((map, emp) => {
         map[emp.employeeId] = emp;
         return map;
       }, {});
       
-      // Use the payrollData array from the imported JSON
       return payrollDataJSON.payrollData.map(payrollItem => {
         const info = employeeMap[payrollItem.employeeId];
         const dailyRate = info.salary / AVERAGE_WORKING_DAYS_MONTH; 
@@ -149,13 +146,6 @@ export default {
         };
       });
     },
-
-    /**
-     * Simulates the payroll calculation process for all employees.
-     * Updates the netPay, grossPayAfterLeave, leaveCost, and taxes fields for each employee.
-     * Sets the isCalculated flag to true for each employee.
-     * Alerts the user with a success message after the simulation is complete.
-     */
     runPayrollSimulation() {
       this.employeesWithPayData = this.employeesWithPayData.map(emp => {
         const monthlySalary = emp.salary;
@@ -176,14 +166,12 @@ export default {
       });
       alert('Payroll calculation simulated successfully! Net Pay fields are now updated.');
     },
-    
     viewPayslip(employee) {
       if (employee.isCalculated) {
         this.selectedPayslip = employee;
         this.showPayslipModal = true;
       }
     },
-    
     resetPayroll() {
       this.employeesWithPayData = JSON.parse(JSON.stringify(this.initialData));
     }
@@ -225,62 +213,74 @@ p.lead {
   margin-bottom: 1.5rem;
 }
 
-/* Buttons */
-.btn-success, .btn-outline-secondary, .btn-info {
+/* Top buttons wrapper */
+.top-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.top-buttons .btn {
+  font-size: 0.85rem;
+  padding: 6px 14px;
   border-radius: 12px;
-  transition: 0.3s ease;
+  min-width: auto; /* Prevent full width */
+  transition: 0.25s ease;
 }
 
-.btn-success:hover {
-  background: #5548c8;
+.top-buttons .btn:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
 }
 
-.btn-outline-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-}
-
-.btn-info {
-  background: #6c63ff;
-  color: #fff;
-  border: none;
-}
-
-.btn-info:hover {
-  background: #5548c8;
-}
-
-/* Glass card table effect */
+/* ---------------- Glassy table styling ---------------- */
 .table-responsive {
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  background: rgba(24, 40, 72, 0.5); /* semi-transparent container */
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  padding: 10px;
 }
 
+/* Ensure table and rows inherit transparency */
 .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: transparent !important;
   color: #fff;
 }
 
-.table th, .table td {
+.table th,
+.table td {
   vertical-align: middle;
-  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05); /* very light transparent overlay for glass effect */
+  color: #fff;
+  transition: background 0.25s ease;
 }
 
-.table-dark th {
-  background: rgba(108, 99, 255, 0.8);
-  color: #fff;
+.table th {
+  background: rgba(75, 108, 183, 0.6) !important; /* header semi-transparent blue */
+  font-weight: 600;
+}
+
+/* Striped rows with subtle glass effect */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255,255,255,0.03);
 }
 
 .table-hover tbody tr:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.1) !important;
   transform: translateX(2px);
   transition: 0.25s ease;
 }
 
-/* Modal styling */
+/* ---------------- Modal styling ---------------- */
+.modal-dialog {
+  margin: 80px auto; /* Adds 60px spacing from top */
+}
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -293,18 +293,15 @@ p.lead {
 
 .modal-content {
   border-radius: 20px;
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  background: rgba(24, 40, 72, 0.5);
   color: #fff;
   box-shadow: 0 20px 40px rgba(0,0,0,0.25);
 }
 
-.modal-header {
-  border-bottom: none;
-}
-
+.modal-header,
 .modal-footer {
-  border-top: none;
+  border: none;
 }
 
 /* Deduction list in modal */
@@ -319,7 +316,7 @@ ul.list-unstyled li {
   color: #28a745 !important;
 }
 
-/* Responsive adjustments */
+/* ---------------- Responsive adjustments ---------------- */
 @media (max-width: 768px) {
   .table th, .table td {
     font-size: 0.85rem;
@@ -332,3 +329,4 @@ ul.list-unstyled li {
   }
 }
 </style>
+

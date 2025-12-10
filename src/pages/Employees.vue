@@ -154,7 +154,7 @@ h2.fw-bold {
 
 /* Filters */
 .form-control, .form-select {
-  background: rgba(255,255,255,0.1);
+  background: rgba(87, 150, 240, 0.1);
   border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
   backdrop-filter: blur(10px);
@@ -166,7 +166,6 @@ h2.fw-bold {
   color: rgba(255,255,255,0.7);
 }
 
-.form-control:focus,
 .form-select:focus {
   background: rgba(255,255,255,0.15);
   border-color: #6c63ff;
@@ -175,49 +174,96 @@ h2.fw-bold {
   box-shadow: 0 0 10px rgba(108, 99, 255, 0.4);
 }
 
+/* Dropdown options styling */
+.form-select option {
+  background: rgba(24, 40, 72, 0.9); /* dark background for readability */
+  color: #fff;                        /* white text */
+}
+
 /* Employee Cards */
 .hover-card {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
   border-radius: 20px;
-  padding: 20px;
+  padding: 25px 20px;
   transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .hover-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
-  background: rgba(255,255,255,0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.15);
 }
 
-/* Employee card text */
+/* Employee text */
 .hover-card h5 {
   color: #fff;
+  font-size: 1.2rem;
+  margin-bottom: 4px;
 }
 
 .hover-card p {
-  color: rgba(255,255,255,0.85);
+  color: rgba(255, 255, 255, 0.85);
   margin-bottom: 6px;
 }
 
-/* Badges */
+/* Department Badge */
 .badge {
-  border-radius: 10px;
-  padding: 4px 10px;
+  border-radius: 12px;
+  padding: 4px 12px;
   font-size: 13px;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transition: 0.2s ease;
+}
+
+/* Department badge colors */
+.badge.bg-primary { background: rgba(108, 99, 255, 0.4); color: #fff; }
+.badge.bg-danger { background: rgba(255, 72, 72, 0.4); color: #fff; }
+.badge.bg-warning { background: rgba(255, 196, 0, 0.4); color: #000; }
+.badge.bg-success { background: rgba(72, 255, 99, 0.4); color: #000; }
+.badge.bg-info { background: rgba(0, 183, 255, 0.4); color: #000; }
+.badge.bg-secondary { background: rgba(128, 128, 128, 0.4); color: #fff; }
+.badge.bg-dark { background: rgba(50, 50, 50, 0.4); color: #fff; }
+
+/* Salary */
+.salary {
+  font-weight: 600;
 }
 
 /* Salary colors */
-.text-success {
-  color: #4caf50 !important;
+.text-success { color: #4caf50 !important; }
+.text-warning { color: #ffb74d !important; }
+.text-danger { color: #e57373 !important; }
+
+/* Select Dropdown */
+.form-select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 8px 12px;
+  transition: 0.3s ease;
 }
 
-.text-warning {
-  color: #ffb74d !important;
+.form-select:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #6c63ff;
+  outline: none;
+  box-shadow: 0 0 10px rgba(108, 99, 255, 0.4);
 }
 
-.text-danger {
-  color: #e57373 !important;
+/* Focus states */
+.form-control:focus,
+.form-select:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #6c63ff;
+  outline: none;
+  box-shadow: 0 0 10px rgba(108, 99, 255, 0.4);
 }
 
 /* Responsive adjustments */
@@ -227,4 +273,5 @@ h2.fw-bold {
     gap: 15px;
   }
 }
+
 </style>

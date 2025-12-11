@@ -2,8 +2,8 @@
   <div class="home-page py-5">
     <!-- HEADER -->
     <div class="text-center mb-5">
-      <h1 class="fw-bold">Welcome, {{ user.name }}</h1>
-      <p class="text-muted">Your HR overview and quick access panel</p>
+      <h1 class="fw-bold high-contrast-text">Welcome, {{ user.name }}</h1>
+      <p class="subtitle">Your HR overview and quick access panel</p>
     </div>
 
     <!-- PROFILE CARD -->
@@ -129,13 +129,24 @@ const statCards = [
   }
 }
 
-.home-page h1,
-.home-page h4 {
-  color: #ffffff;
+.subtitle {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 1.15rem;
+  font-weight: 400;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.3px;
 }
 
-.home-page p {
-  color: rgba(255, 255, 255, 0.85);
+.home-page p,
+.home-page li,
+.home-page .text-secondary,
+.home-page .text-muted {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.high-contrast-text {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .card {
@@ -144,6 +155,10 @@ const statCards = [
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   transition: 0.3s ease;
+}
+
+.text-secondary {
+  color: rgba(255, 255, 255, 0.9)
 }
 
 .card:hover {
@@ -203,7 +218,7 @@ const statCards = [
 }
 
 .stat-card p {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
 }
 

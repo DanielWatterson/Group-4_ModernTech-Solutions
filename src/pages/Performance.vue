@@ -149,14 +149,26 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 30px;
+    animation: fadeIn 0.8s ease-out;
 }
 
 h2 {
   font-weight: 700;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 p.text-muted {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 0, 0, 0.85);
 }
 
 /* Charts cards */
@@ -187,7 +199,8 @@ p.text-muted {
 }
 
 .text-muted {
-  color: rgba(255, 255, 255, 0.7);
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 /* Responsive adjustments */

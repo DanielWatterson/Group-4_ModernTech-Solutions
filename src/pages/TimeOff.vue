@@ -281,6 +281,7 @@ export default {
     url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')
       center/cover no-repeat;
   color: #fff;
+  animation: fadeIn 0.8s ease-out;
 }
 
 /* Page header */
@@ -302,6 +303,17 @@ p.lead {
   border: 1px solid rgba(75, 108, 183, 0.7);
   transition: 0.3s ease;
   color: #fff;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .card:hover {

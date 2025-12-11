@@ -158,6 +158,11 @@ h2 {
 p.text-muted {
   color: rgba(255, 255, 255, 0.85);
 }
+#scoreLineChart,
+#statusDoughnutChart {
+  height: 260px !important;
+  max-height: 260px !important;
+}
 
 /* Charts cards */
 .chart-card {

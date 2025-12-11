@@ -71,6 +71,62 @@
         </div>
       </div>
 
+      <div class="col-12 mt-4">
+  <div class="card">
+    <div class="card-header bg-success fw-bold" style="color: white">
+      Leave Status Dashboard
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Leave Type</th>
+            <th>Dates</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr 
+            v-for="req in timeOffRequests.filter(r => r.status !== 'Pending')" 
+            :key="req.id"
+          >
+            <td>{{ req.name }}</td>
+
+            <td>
+              <span class="badge bg-primary">{{ req.typeOfLeave }}</span>
+            </td>
+
+            <td>
+              {{ req.startDate }} → {{ req.endDate }}
+            </td>
+
+            <td>
+              <span 
+                :class="{
+                  'badge bg-success': req.status === 'Approved',
+                  'badge bg-danger': req.status === 'Denied'
+                }"
+              >
+                {{ req.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p 
+        v-if="!timeOffRequests.some(t => t.status === 'Approved' || t.status === 'Denied')" 
+        class="p-3 text-muted text-center"
+      >
+        No approved or denied requests yet.
+      </p>
+    </div>
+  </div>
+</div>
+
       <div class="col-12 mt-3 mb-4">
         <div class="card">
           <div class="card-header bg-secondary text-white fw-bold">

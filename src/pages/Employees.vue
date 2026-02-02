@@ -5,6 +5,9 @@
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h2 class="fw-bold">Employees</h2>
+          <div v-if="loading" class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
         </div>
 
         <!-- Search & Filter -->
@@ -24,9 +27,20 @@
           </select>
         </div>
 
+        <!-- Error Alert -->
+        <div v-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+          {{ error }}
+          <button type="button" class="btn-close" @click="error = ''"></button>
+        </div>
+
+        <!-- No Results Message -->
+        <div v-if="!loading && filteredEmployees.length === 0" class="alert alert-info">
+          No employees found. Try a different search term.
+        </div>
+
         <!-- Employee Cards -->
         <div class="row g-4">
-          <div class="col-md-6" v-for="employee in filteredEmployees" :key="employee.employeeId">
+          <div class="col-md-6" v-for="employee in filteredEmployees" :key="employee.employee_id">
             <div class="border rounded p-3 shadow-sm hover-card">
               <!-- Name & Position -->
               <h5 class="fw-bold mb-1">{{ employee.name }}</h5>
@@ -44,7 +58,7 @@
               <p class="mb-1">
                 <strong>Salary:</strong>
                 <span :class="['fw-bold', salaryColor(employee.salary)]">
-                  R{{ employee.salary }}
+                  R{{ employee.salary.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
                 </span>
               </p>
 
@@ -52,7 +66,10 @@
               <p class="mb-1"><strong>Email:</strong> {{ employee.contact }}</p>
 
               <!-- History -->
-              <p class="mb-0 text-muted small">{{ employee.employmentHistory }}</p>
+              <p class="mb-0 text-muted small">{{ employee.employment_history }}</p>
+
+              <!-- Employee ID (for debugging) -->
+              <small class="text-muted">ID: {{ employee.employee_id }}</small>
             </div>
           </div>
         </div>
@@ -62,7 +79,8 @@
 </template>
 
 <script>
-import employeeData from '@/data/employee_info.json'
+// Remove the JSON import since we're using API
+// import employeeData from '@/data/employee_info.json'
 
 export default {
   name: 'Employees',
@@ -71,13 +89,15 @@ export default {
     return {
       searchQuery: '',
       selectedDepartment: '',
-      employees: employeeData.employeeInformation,
+      employees: [],
+      loading: false,
+      error: ''
     }
   },
 
   computed: {
     uniqueDepartments() {
-      return [...new Set(this.employees.map((e) => e.department))]
+      return [...new Set(this.employees.map((e) => e.department).filter(Boolean))]
     },
 
     filteredEmployees() {
@@ -94,8 +114,49 @@ export default {
     },
   },
 
+  async created() {
+    await this.loadEmployees()
+  },
+
   methods: {
+    async loadEmployees() {
+      this.loading = true
+      this.error = ''
+      
+      try {
+        // Fetch from your backend API
+        const response = await fetch('http://localhost:5000/api/employees')
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch employees: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        this.employees = data
+        
+        console.log('Loaded employees:', data.length)
+        
+      } catch (error) {
+        console.error('Error loading employees:', error)
+        this.error = `Failed to load employees. ${error.message}. Using fallback data.`
+        
+        // Fallback to local JSON if API fails
+        try {
+          const employeeData = await import('@/data/employee_info.json')
+          this.employees = employeeData.employeeInformation
+          console.log('Using fallback JSON data')
+        } catch (jsonError) {
+          this.error = 'Could not load any employee data. Please check your connection.'
+          this.employees = []
+        }
+      } finally {
+        this.loading = false
+      }
+    },
+
     departmentBadge(dept) {
+      if (!dept) return 'bg-secondary'
+      
       const colors = {
         Development: 'bg-primary',
         HR: 'bg-danger',
@@ -111,6 +172,7 @@ export default {
     },
 
     salaryColor(salary) {
+      if (!salary) return 'text-secondary'
       if (salary >= 70000) return 'text-success'
       if (salary >= 60000) return 'text-warning'
       return 'text-danger'
@@ -148,6 +210,27 @@ export default {
 h2.fw-bold {
   color: #fff;
   margin-bottom: 20px;
+}
+
+/* Loading spinner */
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Error Alert */
+.alert-danger {
+  background: rgba(220, 53, 69, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(220, 53, 69, 0.5);
+  color: #ff6b6b;
+}
+
+.alert-info {
+  background: rgba(23, 162, 184, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(23, 162, 184, 0.5);
+  color: #4dabf7;
 }
 
 /* Filters */
@@ -210,6 +293,11 @@ h2.fw-bold {
   margin-bottom: 6px;
 }
 
+.hover-card small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+}
+
 /* Department Badge */
 .badge {
   border-radius: 12px;
@@ -220,6 +308,7 @@ h2.fw-bold {
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
   transition: 0.2s ease;
+  margin-left: 8px;
 }
 
 /* Department badge colors */
@@ -252,11 +341,6 @@ h2.fw-bold {
   color: #fff;
 }
 
-/* Salary */
-.salary {
-  font-weight: 600;
-} 
-
 /* Salary colors */
 .text-success {
   color: #4caf50 !important;
@@ -266,6 +350,9 @@ h2.fw-bold {
 }
 .text-danger {
   color: #e57373 !important;
+}
+.text-secondary {
+  color: #b0bec5 !important;
 }
 
 /* Select Dropdown */
@@ -300,6 +387,14 @@ h2.fw-bold {
   .d-flex.gap-3 {
     flex-direction: column;
     gap: 15px;
+  }
+  
+  .form-select.w-25 {
+    width: 100% !important;
+  }
+  
+  .container {
+    padding: 40px 15px;
   }
 }
 </style>

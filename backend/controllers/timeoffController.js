@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const Timeoff = require('../models/Timeoff');
 
 // For HR dashboard: get all time off requests
@@ -34,4 +35,36 @@ exports.getEmployeeTimeoffs = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+=======
+const TimeOff = require('../models/Timeoff');
+
+exports.getTimeOffData = async (req, res) => {
+    try {
+        const requests = await TimeOff.getAllRequests();
+        const balances = await TimeOff.getBalances();
+        res.json({ requests, balances });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.updateRequestStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        await TimeOff.updateStatus(id, status);
+        res.json({ message: `Request ${status} successfully` });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.submitRequest = async (req, res) => {
+    try {
+        const requestId = await TimeOff.createRequest(req.body);
+        res.status(201).json({ message: 'Request submitted', id: requestId });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+>>>>>>> 64f1ab6 (Added the backend for TimeOff and PayRoll(Models, Controllers,upadted the Front-End))
 };

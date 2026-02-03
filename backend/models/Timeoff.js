@@ -1,5 +1,6 @@
 const db = require('../config/database');
 
+<<<<<<< HEAD
 class Timeoff {
   // Create a new time off request
   static async requestTimeoff(employeeId, data) {
@@ -48,3 +49,48 @@ class Timeoff {
 }
 
 module.exports = Timeoff;
+=======
+const TimeOff = {
+    // Fetch all leave requests with employee names
+    getAllRequests: async () => {
+        const [rows] = await db.query(`
+            SELECT lr.*, e.name
+            FROM leave_requests lr
+            JOIN employees e ON lr.employee_id = e.employee_id
+            ORDER BY lr.requested_at DESC
+        `);
+        return rows;
+    },
+
+    // Fetch balances for all employees
+    getBalances: async () => {
+        const [rows] = await db.query(`
+            SELECT lb.*, e.name
+            FROM leave_balances lb
+            JOIN employees e ON lb.employee_id = e.employee_id
+        `);
+        return rows;
+    },
+
+    // Update the status (The DB Trigger will handle balance deduction on 'Approved')
+    updateStatus: async (leaveId, status, processedBy = 1) => {
+        const [result] = await db.query(
+            'UPDATE leave_requests SET status = ?, processed_by = ?, processed_at = NOW() WHERE leave_id = ?',
+            [status, processedBy, leaveId]
+        );
+        return result;
+    },
+
+    // Create a new request
+    createRequest: async (data) => {
+        const { employee_id, leave_type, start_date, end_date, reason } = data;
+        const [result] = await db.query(
+            'INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, reason) VALUES (?, ?, ?, ?, ?)',
+            [employee_id, leave_type, start_date, end_date, reason]
+        );
+        return result.insertId;
+    }
+};
+
+module.exports = TimeOff;
+>>>>>>> 64f1ab6 (Added the backend for TimeOff and PayRoll(Models, Controllers,upadted the Front-End))

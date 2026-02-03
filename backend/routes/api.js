@@ -1,18 +1,21 @@
-// backend/routes/api.js
 const express = require('express');
 const router = express.Router();
 
-// Import controllers
+// Controllers
 const dashboardController = require('../controllers/dashboardController');
 const employeeController = require('../controllers/employeeController');
+const timeoffController = require('../controllers/timeoffController');
 
-// Dashboard routes
+// Dashboard
 router.get('/dashboard', dashboardController.getDashboardData);
 router.get('/dashboard/kpis', dashboardController.getKPIs);
 router.get('/health', dashboardController.getHealth);
 
-// Employee routes
-router.get('/employees', employeeController.getAllEmployees);
+// Employees
 router.get('/employees/:id', employeeController.getEmployeeById);
+
+// Time Off
+router.get('/timeoff', timeoffController.getAllTimeoffs);         // HR: get all requests
+router.put('/timeoff/:id/status', timeoffController.updateStatus); // Approve/Deny
 
 module.exports = router;

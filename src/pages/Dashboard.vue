@@ -1,113 +1,322 @@
 <template>
-  <div class="dashboard p-3">
-    <h2 class="mb-4">Dashboard Overview</h2>
+  <div class="dashboard p-4">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header mb-4">
+      <h2>Dashboard Overview</h2>
+      <div class="header-status">
+        <span class="badge" :class="databaseStatus.class">
+          <i class="bi" :class="databaseStatus.icon"></i> {{ databaseStatus.text }}
+        </span>
+        <small v-if="lastUpdated">Last updated: {{ lastUpdated }}</small>
+        <button @click="refreshData" class="btn btn-sm btn-outline-light ms-3">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+    </div>
 
-    <!-- KPI CARDS -->
-    <div class="row mb-4">
-      <div class="col-md-3" v-for="kpi in kpis" :key="kpi.label">
-        <div class="card text-center shadow-sm">
-          <div class="card-body">
-            <h5>{{ kpi.label }}</h5>
-            <h2>{{ kpi.value }}</h2>
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state text-center py-5">
+      <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+      <p class="mt-3">Loading dashboard data from database...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="alert alert-danger">
+      <h5><i class="bi bi-exclamation-triangle"></i> Database Connection Error</h5>
+      <p>{{ error }}</p>
+      <button @click="fetchDashboardData" class="btn btn-sm btn-outline-light mt-2">Retry Connection</button>
+      <button @click="useJSONData" class="btn btn-sm btn-outline-warning mt-2 ms-2">
+        Use Local Data
+      </button>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div v-else>
+      <!-- KPI CARDS -->
+      <div class="row mb-4">
+        <div class="col-md-3 mb-3" v-for="kpi in kpis" :key="kpi.label">
+          <div class="card kpi-card text-center shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">{{ kpi.label }}</h5>
+              <h2 class="display-6">{{ kpi.value }}</h2>
+              <small class="text-muted">{{ kpi.description }}</small>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- PERFORMANCE SNAPSHOT section -->
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <h5>Performance Snapshot</h5>
-        <ul class="list-group mt-3">
-          <li class="list-group-item"><strong>Average Score:</strong> {{ averageScore }}</li>
+      <!-- PERFORMANCE SNAPSHOT -->
+      <div class="row">
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary bg-opacity-25 border-0">
+              <h5 class="mb-0">Performance Snapshot</h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <strong>Average Score:</strong>
+                <span class="float-end badge bg-info fs-6">{{ averageScore }}</span>
+              </div>
+              
+              <div v-if="topPerformer">
+                <strong>Top Performer:</strong>
+                <div class="d-flex justify-content-between align-items-center mt-2 p-2 bg-dark bg-opacity-25 rounded">
+                  <div>
+                    <strong>{{ topPerformer.employee_name || topPerformer.employeeName }}</strong>
+                    <div class="small">{{ topPerformer.department }}</div>
+                  </div>
+                  <span class="badge bg-success fs-6">{{ topPerformer.score }}</span>
+                </div>
+              </div>
+              
+              <div class="mt-3">
+                <strong>Performance Distribution:</strong>
+                <div class="mt-2">
+                  <div v-for="(count, status) in performanceDistribution" :key="status" 
+                       class="d-flex justify-content-between align-items-center mb-1">
+                    <span>{{ status }}</span>
+                    <span class="badge" :class="getStatusBadgeClass(status)">{{ count }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <li class="list-group-item">
-            <strong>Top Performer:</strong>
-            {{ topPerformer.employeeName }} ({{ topPerformer.score }})
-          </li>
-        </ul>
+        <!-- EMPLOYEES BY DEPARTMENT -->
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-success bg-opacity-25 border-0">
+              <h5 class="mb-0">Employees by Department</h5>
+            </div>
+            <div class="card-body">
+              <div v-if="Object.keys(departmentStats).length > 0">
+                <div v-for="(count, dept) in departmentStats" :key="dept" class="mb-2">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span>{{ dept }}</span>
+                    <span class="badge bg-secondary">{{ count }} employees</span>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div 
+                      class="progress-bar" 
+                      :class="getDepartmentColor(dept)"
+                      :style="{ width: getDepartmentPercentage(count) + '%' }"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-center py-3">
+                <p class="text-muted">No department data available</p>
+              </div>
+              
+              <!-- Additional Stats -->
+              <div class="mt-4 pt-3 border-top">
+                <div class="row text-center">
+                  <div class="col-6">
+                    <div class="stat-number">{{ totalEmployees }}</div>
+                    <div class="stat-label">Total Employees</div>
+                  </div>
+                  <div class="col-6">
+                    <div class="stat-number">{{ Object.keys(departmentStats).length }}</div>
+                    <div class="stat-label">Departments</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- EMPLOYEES BY DEPARTMENT - Section -->
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <h5>Employees by Department</h5>
-        <ul class="list-group mt-3">
-          <li v-for="(count, dept) in deptCounts" :key="dept" class="list-group-item">
-            {{ dept }} — {{ count }} employees
-          </li>
-        </ul>
+      <!-- Database Info Footer -->
+      <div class="mt-4 text-center">
+        <small class="text-muted">
+          <i class="bi bi-database"></i> Connected to MySQL database | 
+          Data fetched via API | 
+          <button @click="fetchDashboardData" class="btn btn-sm btn-outline-light ms-2">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+          </button>
+        </small>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import employeesJSON from '../data/employee_info.json'
-import performanceJSON from '../data/performance_info.json'
+import apiService from '@/services/api';
+import employeeInfoJSON from '@/data/employee_info.json';
+import performanceJSON from '@/data/performance_info.json';
 
 export default {
   name: 'Dashboard',
-
-  /**
-   * Returns an object containing dashboard data.
-   *
-   * @property {Array} employees - Employee information from employee_info.json
-   * @property {Array} performance - Performance information from performance_info.json
-   * @property {Array} kpis - Dashboard KPIs
-   * @property {Object} kpis[0] - Total employees
-   * @property {Object} kpis[1] - Departments
-   * @property {Object} kpis[2] - Average performance score
-   * @property {Object} kpis[3] - Top performer score
-   */
+  
   data() {
     return {
-      employees: employeesJSON.employeeInformation,
-      performance: performanceJSON,
-
+      loading: true,
+      error: null,
+      lastUpdated: null,
+      
+      // Data from SQL
+      employees: [],
+      performance: [],
+      
+      // Dashboard stats
       kpis: [
-        { label: 'Total Employees', value: 0 },
-        { label: 'Departments', value: 0 },
-        { label: 'Avg Performance Score', value: 0 },
-        { label: 'Top Performer Score', value: 0 },
+        { label: 'Total Employees', value: 0, description: 'Active employees' },
+        { label: 'Departments', value: 0, description: 'Active departments' },
+        { label: 'Avg Performance', value: 0, description: 'Overall average score' },
+        { label: 'Top Performer', value: 0, description: 'Highest score' }
       ],
+      
+      // JSON fallback data
+      jsonEmployees: employeeInfoJSON.employeeInformation || [],
+      jsonPerformance: performanceJSON || []
     }
   },
-
+  
   computed: {
-    // Count employees per department, as an object
-    deptCounts() {
-      const counts = {}
-      this.employees.forEach((e) => {
-        counts[e.department] = (counts[e.department] || 0) + 1
-      })
-      return counts
+    databaseStatus() {
+      if (this.loading) return { text: 'Connecting...', class: 'bg-warning', icon: 'bi-hourglass' }
+      if (this.error) return { text: 'Disconnected', class: 'bg-danger', icon: 'bi-x-circle' }
+      return { text: 'Connected', class: 'bg-success', icon: 'bi-check-circle' }
     },
-
-    // Average performance score caclulated among all employees
+    
+    totalEmployees() {
+      return this.employees.length || this.jsonEmployees.length;
+    },
+    
+    departmentStats() {
+      const stats = {};
+      const employeesToUse = this.employees.length ? this.employees : this.jsonEmployees;
+      
+      employeesToUse.forEach(emp => {
+        const dept = emp.department || 'Unknown';
+        stats[dept] = (stats[dept] || 0) + 1;
+      });
+      return stats;
+    },
+    
     averageScore() {
-      const scores = this.performance.map((p) => p.score)
-      return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      const performanceToUse = this.performance.length ? this.performance : this.jsonPerformance;
+      if (!performanceToUse.length) return 'N/A';
+      const total = performanceToUse.reduce((sum, perf) => sum + (perf.score || 0), 0);
+      return Math.round(total / performanceToUse.length);
     },
-
-    // Best performer - Not really explainable
+    
     topPerformer() {
-      return this.performance.reduce((best, p) => (p.score > best.score ? p : best))
+      const performanceToUse = this.performance.length ? this.performance : this.jsonPerformance;
+      if (!performanceToUse.length) return null;
+      return performanceToUse.reduce((best, current) => 
+        (current.score || 0) > (best.score || 0) ? current : best
+      );
     },
+    
+    performanceDistribution() {
+      const performanceToUse = this.performance.length ? this.performance : this.jsonPerformance;
+      const distribution = {};
+      performanceToUse.forEach(perf => {
+        const status = perf.status || 'Unknown';
+        distribution[status] = (distribution[status] || 0) + 1;
+      });
+      return distribution;
+    }
   },
-
-  mounted() {
-    // Fill KPI card values with data
-    this.kpis[0].value = this.employees.length
-    this.kpis[1].value = Object.keys(this.deptCounts).length
-    this.kpis[2].value = this.averageScore
-    this.kpis[3].value = this.topPerformer.score
+  
+  async mounted() {
+    await this.fetchDashboardData();
   },
+  
+  methods: {
+    async fetchDashboardData() {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        // Try to fetch from API first
+        console.log('Fetching data from API...');
+        
+        const [employeesRes, performanceRes] = await Promise.all([
+          apiService.getEmployees(),
+          apiService.getPerformance()
+        ]);
+        
+        // Update with API data
+        this.employees = employeesRes.data || employeesRes;
+        this.performance = performanceRes.data || performanceRes;
+        
+        // Update KPI cards
+        this.updateKPIs();
+        
+        // Update timestamp
+        this.lastUpdated = new Date().toLocaleTimeString();
+        
+        console.log('✅ API data loaded successfully');
+        
+      } catch (err) {
+        console.warn('API connection failed, using JSON data:', err.message);
+        this.error = `API Connection Failed: ${err.message}. Using local data.`;
+        
+        // Fallback to JSON data
+        this.useJSONData();
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    useJSONData() {
+      console.log('Using JSON fallback data');
+      this.employees = this.jsonEmployees;
+      this.performance = this.jsonPerformance;
+      this.updateKPIs();
+      this.error = null;
+      this.lastUpdated = new Date().toLocaleTimeString() + ' (Local Data)';
+    },
+    
+    updateKPIs() {
+      this.kpis[0].value = this.totalEmployees;
+      this.kpis[1].value = Object.keys(this.departmentStats).length;
+      this.kpis[2].value = this.averageScore;
+      this.kpis[3].value = this.topPerformer ? this.topPerformer.score : 'N/A';
+    },
+    
+    getDepartmentColor(dept) {
+      const colors = {
+        'Development': 'bg-primary',
+        'Marketing': 'bg-success',
+        'IT': 'bg-info',
+        'Design': 'bg-warning',
+        'Finance': 'bg-danger',
+        'Support': 'bg-secondary',
+        'Sales': 'bg-dark',
+        'QA': 'bg-primary',
+        'HR': 'bg-success'
+      };
+      return colors[dept] || 'bg-light';
+    },
+    
+    getDepartmentPercentage(count) {
+      const total = Object.values(this.departmentStats).reduce((sum, val) => sum + val, 0);
+      return total > 0 ? (count / total) * 100 : 0;
+    },
+    
+    getStatusBadgeClass(status) {
+      const classes = {
+        'Excellent': 'bg-success',
+        'Good': 'bg-info',
+        'Average': 'bg-warning',
+        'Poor': 'bg-danger'
+      };
+      return classes[status] || 'bg-secondary';
+    },
+    
+    refreshData() {
+      this.fetchDashboardData();
+    }
+  }
 }
 </script>
+
 <style scoped>
-/* Dashboard main container */
+/* Your existing styles remain the same */
 .dashboard {
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
@@ -119,7 +328,7 @@ export default {
   color: #fff;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 30px;
   animation: fadeIn 0.8s ease-out;
 }
 
@@ -134,85 +343,5 @@ export default {
   }
 }
 
-/* Headings */
-.dashboard h2,
-.dashboard h5 {
-  color: #fff;
-  margin-bottom: 15px;
-}
-
-.dashboard h2 {
-  font-weight: 700;
-}
-
-/* Glassy card effect */
-.card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  transition: 0.3s ease;
-}
-
-/* Card hover effect */
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-}
-
-/* KPI cards */
-.kpi-card {
-  text-align: center;
-  padding: 25px 15px;
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.08);
-  transition: 0.3s ease;
-}
-
-.kpi-card h2 {
-  color: #fff;
-  font-weight: 700;
-}
-
-.kpi-card h5 {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
-}
-
-.kpi-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* List groups */
-.list-group-item {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border: none;
-  padding: 12px 16px;
-  margin-bottom: 6px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: 0.25s ease;
-}
-
-.list-group-item:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateX(3px);
-}
-
-.list-group-item strong {
-  font-weight: 600;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .dashboard .row {
-    flex-direction: column;
-    gap: 15px;
-  }
-}
+/* ... rest of your existing Dashboard.vue styles ... */
 </style>

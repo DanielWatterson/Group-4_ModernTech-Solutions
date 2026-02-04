@@ -7,127 +7,122 @@
       **digital payslip generation**.
     </p>
 
-    <!-- Top buttons wrapper -->
-    <div class="top-buttons">
-      <button class="btn btn-success" @click="runPayrollSimulation" :disabled="allCalculated">
-        <i class="bi bi-calculator-fill"></i> Run Payroll Simulation
-      </button>
-      <button class="btn btn-outline-secondary" @click="resetPayroll">Reset Payroll Data</button>
+    <div v-if="loading" class="text-center my-5">
+      <div class="spinner-border text-light" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2 text-white">Fetching Payroll Records from Database...</p>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-striped table-hover align-middle">
-        <thead class="table-dark">
-          <tr>
-            <th>ID</th>
-            <th>Employee Name</th>
-            <th>Position</th>
-            <th>Monthly Salary</th>
-            <th>Hours Worked</th>
-            <th>Leave Days Deduction</th>
-            <th class="text-end">Net Pay (Calculated)</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="employee in employeesWithPayData" :key="employee.employeeId">
-            <td>{{ employee.employeeId }}</td>
-            <td>{{ employee.name }}</td>
-            <td>{{ employee.position }}</td>
-            <td>R{{ employee.salary.toLocaleString('en-ZA') }}</td>
-            <td>{{ employee.hoursWorked || 0 }}</td>
-            <td>{{ employee.leaveDeductions || 0 }}</td>
-            <td class="text-end">
-              <span :class="{ 'fw-bold text-success': employee.isCalculated }">
-                {{
-                  employee.isCalculated
-                    ? `R${employee.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
-                    : '—'
-                }}
-              </span>
-            </td>
-            <td>
-              <button
-                class="btn btn-sm"
-                :class="employee.isCalculated ? 'btn-info' : 'btn-outline-secondary'"
-                :disabled="!employee.isCalculated"
-                @click="viewPayslip(employee)"
-              >
-                <i class="bi bi-file-earmark-text"></i> View Payslip
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-else-if="error" class="alert alert-danger d-flex align-items-center" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      <div>
+        <strong>Error:</strong> {{ error }}
+        <button class="btn btn-sm btn-outline-danger ms-3" @click="fetchPayrollData">Retry</button>
+      </div>
     </div>
 
-    <!-- Payslip Modal -->
-    <div v-if="showPayslipModal" class="modal-backdrop">
+    <div v-else>
+      <div class="top-buttons">
+        <button class="btn btn-success" @click="runPayrollSimulation" :disabled="allCalculated">
+          <i class="bi bi-calculator-fill me-1"></i>
+          {{ allCalculated ? 'Payroll Fully Processed' : 'Run Payroll Simulation' }}
+        </button>
+        <button class="btn btn-outline-light" @click="resetPayroll">
+          <i class="bi bi-arrow-clockwise me-1"></i> Reset Payroll Data
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Employee Name</th>
+              <th>Position</th>
+              <th>Monthly Salary</th>
+              <th>Hours Worked</th>
+              <th>Leave Days</th>
+              <th class="text-end">Net Pay (Calculated)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="employee in employeesWithPayData" :key="employee.employeeId">
+              <td>{{ employee.employeeId }}</td>
+              <td>{{ employee.name }}</td>
+              <td>{{ employee.position }}</td>
+              <td>R{{ employee.salary.toLocaleString('en-ZA') }}</td>
+              <td>{{ employee.hoursWorked }}</td>
+              <td>{{ employee.leaveDeductions }}</td>
+              <td class="text-end">
+                <span :class="{ 'fw-bold text-success': employee.isCalculated }">
+                  {{
+                    employee.isCalculated
+                      ? `R${employee.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
+                      : '—'
+                  }}
+                </span>
+              </td>
+              <td>
+                <button
+                  class="btn btn-sm"
+                  :class="employee.isCalculated ? 'btn-info text-white' : 'btn-outline-secondary text-white'"
+                  :disabled="!employee.isCalculated"
+                  @click="viewPayslip(employee)"
+                >
+                  <i class="bi bi-file-earmark-text"></i> View Payslip
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="employeesWithPayData.length === 0" class="p-5 text-center text-white-50">
+          No employee records found in the system.
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showPayslipModal" class="modal-backdrop d-flex align-items-center justify-content-center">
       <div class="modal d-block" tabindex="-1">
         <div class="modal-dialog modal-lg">
-          <div class="modal-content">
+          <div class="modal-content text-dark bg-white">
             <div class="modal-header bg-primary text-white">
               <h5 class="modal-title">Digital Payslip: {{ selectedPayslip.name }}</h5>
-              <button
-                type="button"
-                class="btn-close btn-close-white"
-                @click="showPayslipModal = false"
-              ></button>
+              <button type="button" class="btn-close btn-close-white" @click="showPayslipModal = false"></button>
             </div>
             <div class="modal-body" v-if="selectedPayslip">
-              <div class="row">
-                <div class="col-md-6">
-                  <p><strong>Employee ID:</strong> {{ selectedPayslip.employeeId }}</p>
+              <div class="row mb-4">
+                <div class="col-6">
+                  <p><strong>Employee ID:</strong> #{{ selectedPayslip.employeeId }}</p>
                   <p><strong>Position:</strong> {{ selectedPayslip.position }}</p>
                 </div>
-                <div class="col-md-6 text-end">
-                  <p>
-                    <strong>Monthly Salary (Gross Base):</strong> R{{
-                      selectedPayslip.salary.toLocaleString('en-ZA')
-                    }}
-                  </p>
-                  <p>
-                    <strong>Gross Pay (Before Tax):</strong> R{{
-                      selectedPayslip.grossPayAfterLeave.toLocaleString('en-ZA', {
-                        minimumFractionDigits: 2,
-                      })
-                    }}
-                  </p>
+                <div class="col-6 text-end">
+                  <p><strong>Base Salary:</strong> R{{ selectedPayslip.salary.toLocaleString('en-ZA') }}</p>
+                  <p><strong>Calculated Gross:</strong> R{{ selectedPayslip.grossPayAfterLeave.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}</p>
                 </div>
               </div>
               <hr />
               <h6>Deductions:</h6>
-              <ul class="list-unstyled">
-                <li>
-                  Taxes ({{ (taxRate * 100).toFixed(0) }}%):
-                  <span class="float-end text-danger"
-                    >R{{
-                      selectedPayslip.taxes.toLocaleString('en-ZA', { minimumFractionDigits: 2 })
-                    }}</span
-                  >
+              <ul class="list-group list-group-flush mb-4">
+                <li class="list-group-item d-flex justify-content-between">
+                  Income Tax ({{ (taxRate * 100).toFixed(0) }}%)
+                  <span class="text-danger">-R{{ selectedPayslip.taxes.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}</span>
                 </li>
-                <li>
-                  Leave Deductions ({{ selectedPayslip.leaveDeductions }} days):
-                  <span class="float-end text-danger"
-                    >R{{
-                      selectedPayslip.leaveCost.toLocaleString('en-ZA', {
-                        minimumFractionDigits: 2,
-                      })
-                    }}</span
-                  >
+                <li class="list-group-item d-flex justify-content-between">
+                  Leave Deductions ({{ selectedPayslip.leaveDeductions }} days)
+                  <span class="text-danger">-R{{ selectedPayslip.leaveCost.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}</span>
                 </li>
               </ul>
-              <hr />
-              <h4 class="text-success text-center">
-                Net Pay: R{{
-                  selectedPayslip.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 })
-                }}
-              </h4>
+              <div class="bg-light p-3 rounded">
+                <h4 class="text-success text-center mb-0">
+                  NET TAKE-HOME PAY: R{{ selectedPayslip.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
+                </h4>
+              </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" @click="showPayslipModal = false">
-                Close
-              </button>
+              <button class="btn btn-outline-primary" @click="window.print()"><i class="bi bi-printer"></i> Print</button>
+              <button type="button" class="btn btn-secondary" @click="showPayslipModal = false">Close</button>
             </div>
           </div>
         </div>
@@ -137,82 +132,86 @@
 </template>
 
 <script>
-import employeeInfoJSON from '@/data/employee_info.json'
-import payrollDataJSON from '@/data/payroll_data.json'
-
-const AVERAGE_WORKING_DAYS_MONTH = 22
-
 export default {
   name: 'Payroll',
   data() {
     return {
-      initialData: this.mergePayrollData(),
+      loading: true,
+      error: null,
       employeesWithPayData: [],
       showPayslipModal: false,
       selectedPayslip: null,
       taxRate: 0.25,
+      apiBase: 'http://localhost:5000/api/payroll'
     }
   },
   computed: {
     allCalculated() {
-      return this.employeesWithPayData.every((emp) => emp.isCalculated)
+      return this.employeesWithPayData.length > 0 &&
+             this.employeesWithPayData.every((emp) => emp.isCalculated)
     },
   },
-  created() {
-    this.employeesWithPayData = JSON.parse(JSON.stringify(this.initialData))
+  async mounted() {
+    await this.fetchPayrollData();
   },
   methods: {
-    mergePayrollData() {
-      const employeeMap = employeeInfoJSON.employeeInformation.reduce((map, emp) => {
-        map[emp.employeeId] = emp
-        return map
-      }, {})
+    async fetchPayrollData() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await fetch(this.apiBase);
+        if (!response.ok) throw new Error('Could not connect to Payroll API');
 
-      return payrollDataJSON.payrollData.map((payrollItem) => {
-        const info = employeeMap[payrollItem.employeeId]
-        const dailyRate = info.salary / AVERAGE_WORKING_DAYS_MONTH
+        const data = await response.json();
 
-        return {
-          ...info,
-          ...payrollItem,
-          dailyRate: dailyRate,
-          isCalculated: false,
-          grossPayAfterLeave: 0,
-          taxes: 0,
-          leaveCost: 0,
-          netPay: 0,
-        }
-      })
-    },
-    runPayrollSimulation() {
-      this.employeesWithPayData = this.employeesWithPayData.map((emp) => {
-        const monthlySalary = emp.salary
-        const dailyRate = emp.dailyRate
-        const leaveCost = dailyRate * emp.leaveDeductions
-        const grossPayAfterLeave = monthlySalary - leaveCost
-        const taxes = grossPayAfterLeave * this.taxRate
-        const netPay = grossPayAfterLeave - taxes
-
-        return {
-          ...emp,
-          grossPayAfterLeave: grossPayAfterLeave,
-          taxes: taxes,
-          leaveCost: leaveCost,
-          netPay: netPay,
-          isCalculated: true,
-        }
-      })
-      alert('Payroll calculation simulated successfully! Net Pay fields are now updated.')
-    },
-    viewPayslip(employee) {
-      if (employee.isCalculated) {
-        this.selectedPayslip = employee
-        this.showPayslipModal = true
+        // Data Mapping: Backend SQL to Frontend CamelCase
+        this.employeesWithPayData = data.map(emp => ({
+          employeeId: emp.employee_id,
+          name: emp.name,
+          position: emp.position,
+          salary: parseFloat(emp.salary),
+          hoursWorked: emp.hours_worked || 160,
+          leaveDeductions: emp.leave_deductions || 0,
+          grossPayAfterLeave: parseFloat(emp.gross_salary) || 0,
+          taxes: parseFloat(emp.tax_amount) || 0,
+          netPay: parseFloat(emp.net_salary) || 0,
+          isCalculated: emp.net_salary !== null && emp.net_salary > 0,
+          // Calculate leave cost for the payslip display
+          leaveCost: (parseFloat(emp.salary) / 22) * (emp.leave_deductions || 0)
+        }));
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.loading = false;
       }
     },
-    resetPayroll() {
-      this.employeesWithPayData = JSON.parse(JSON.stringify(this.initialData))
+
+    async runPayrollSimulation() {
+      try {
+        // Trigger the "Calculate All" endpoint we built for your model
+        const response = await fetch(`${this.apiBase}/calculate-all`, {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          await this.fetchPayrollData(); // Refresh UI with actual DB numbers
+          alert('Success: Database payroll tables updated.');
+        } else {
+          throw new Error('Server failed to process calculations');
+        }
+      } catch (err) {
+        alert("Action failed: " + err.message);
+      }
     },
+
+    viewPayslip(employee) {
+      this.selectedPayslip = employee;
+      this.showPayslipModal = true;
+    },
+
+    resetPayroll() {
+        alert("Reset functionality requires a DELETE endpoint in the backend to clear the payroll table.");
+    }
   },
 }
 </script>

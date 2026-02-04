@@ -1,12 +1,21 @@
 <template>
   <div class="container py-4">
     <h2>Time Off Management Dashboard</h2>
-    <p class="lead">
-      This page allows HR staff to manage time off requests across multiple leave categories and
-      tracks employee attendance performance.
-    </p>
+    <p class="lead">Manage employee leave requests and balances in real-time.</p>
 
-    <div class="row">
+    <div v-if="loading" class="text-center my-5">
+      <div class="spinner-border text-light" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Fetching data from HR Database...</p>
+    </div>
+
+    <div v-else-if="error" class="alert alert-danger">
+      <strong>Error:</strong> {{ error }}
+      <button class="btn btn-sm btn-outline-danger ms-3" @click="fetchData">Retry</button>
+    </div>
+
+    <div v-else class="row">
       <div class="col-lg-5 mb-4">
         <div class="card bg-light">
           <div class="card-header fw-bold">Current Employee Leave Balances</div>
@@ -14,16 +23,9 @@
             <li class="list-group-item" v-for="balance in leaveBalances" :key="balance.employeeId">
               <span class="fw-bold">{{ balance.name }}</span>
               <div class="row small mt-1">
-                <div class="col-6">
-                  Annual: <span class="badge bg-success">{{ balance.annualBalance }} days</span>
-                </div>
-                <div class="col-6">
-                  Sick:
-                  <span class="badge bg-warning text-dark">{{ balance.sickBalance }} days</span>
-                </div>
-                <div class="col-6">
-                  Family: <span class="badge bg-info">{{ balance.familyBalance }} days</span>
-                </div>
+                <div class="col-6">Annual: <span class="badge bg-success">{{ balance.annualBalance }} days</span></div>
+                <div class="col-6">Sick: <span class="badge bg-warning text-dark">{{ balance.sickBalance }} days</span></div>
+                <div class="col-6">Family: <span class="badge bg-info">{{ balance.familyBalance }} days</span></div>
                 <div class="col-6">Unpaid: <span class="badge bg-secondary">Tracked</span></div>
               </div>
             </li>
@@ -33,7 +35,7 @@
 
       <div class="col-lg-7 mb-4">
         <div class="card">
-          <div class="card-header bg-warning fw-bold" style="color: white">
+          <div class="card-header bg-warning fw-bold text-white">
             Pending Time Off Requests ({{ pendingRequests.length }})
           </div>
           <div class="table-responsive">
@@ -49,114 +51,42 @@
               <tbody>
                 <tr v-for="request in pendingRequests" :key="request.id">
                   <td>{{ request.name }}</td>
-                  <td>
-                    <span class="badge bg-primary">{{ request.typeOfLeave }}</span>
-                  </td>
+                  <td><span class="badge bg-primary">{{ request.typeOfLeave }}</span></td>
                   <td>{{ calculateDays(request.startDate, request.endDate) }}</td>
                   <td>
-                    <button class="btn btn-sm btn-success me-2" @click="approveRequest(request)">
-                      Approve
-                    </button>
-                    <button class="btn btn-sm btn-danger" @click="denyRequest(request)">
-                      Deny
-                    </button>
+                    <button class="btn btn-sm btn-success me-2" @click="updateRequestStatus(request.id, 'Approved')">Approve</button>
+                    <button class="btn btn-sm btn-danger" @click="updateRequestStatus(request.id, 'Denied')">Deny</button>
                   </td>
                 </tr>
               </tbody>
             </table>
-            <p v-if="!pendingRequests.length" class="p-3 text-muted text-center">
-              No pending requests.
-            </p>
+            <p v-if="!pendingRequests.length" class="p-3 text-muted text-center">No pending requests.</p>
           </div>
         </div>
       </div>
 
       <div class="col-12 mt-4">
-  <div class="card">
-    <div class="card-header bg-success fw-bold" style="color: white">
-      Leave Status Dashboard
-    </div>
-
-    <div class="table-responsive">
-      <table class="table table-sm mb-0 align-middle">
-        <thead>
-          <tr>
-            <th>Employee</th>
-            <th>Leave Type</th>
-            <th>Dates</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr 
-            v-for="req in timeOffRequests.filter(r => r.status !== 'Pending')" 
-            :key="req.id"
-          >
-            <td>{{ req.name }}</td>
-
-            <td>
-              <span class="badge bg-primary">{{ req.typeOfLeave }}</span>
-            </td>
-
-            <td>
-              {{ req.startDate }} → {{ req.endDate }}
-            </td>
-
-            <td>
-              <span 
-                :class="{
-                  'badge bg-success': req.status === 'Approved',
-                  'badge bg-danger': req.status === 'Denied'
-                }"
-              >
-                {{ req.status }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p 
-        v-if="!timeOffRequests.some(t => t.status === 'Approved' || t.status === 'Denied')" 
-        class="p-3 text-muted text-center"
-      >
-        No approved or denied requests yet.
-      </p>
-    </div>
-  </div>
-</div>
-
-      <div class="col-12 mt-3 mb-4">
         <div class="card">
-          <div class="card-header bg-secondary text-white fw-bold">
-            Weekly Attendance Performance (Simulated Data)
-          </div>
+          <div class="card-header bg-success fw-bold text-white">Leave Status History</div>
           <div class="table-responsive">
-            <table class="table table-striped table-sm mb-0">
+            <table class="table table-sm mb-0 align-middle">
               <thead>
                 <tr>
                   <th>Employee</th>
-                  <th>Week</th>
-                  <th>Days Present</th>
-                  <th>Days Late</th>
-                  <th>Performance Note</th>
+                  <th>Leave Type</th>
+                  <th>Dates</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="attendance in mockWeeklyAttendance" :key="attendance.employeeId">
-                  <td>{{ getEmployeeName(attendance.employeeId) }}</td>
-                  <td>{{ attendance.week }}</td>
-                  <td>{{ attendance.daysPresent }} / 5</td>
-                  <td>{{ attendance.daysLate }}</td>
+                <tr v-for="req in processedRequests" :key="req.id">
+                  <td>{{ req.name }}</td>
+                  <td><span class="badge bg-primary">{{ req.typeOfLeave }}</span></td>
+                  <td>{{ req.startDate }} → {{ req.endDate }}</td>
                   <td>
-                    <span
-                      :class="{
-                        'badge bg-success': attendance.performance === 'Excellent',
-                        'badge bg-warning text-dark': attendance.performance === 'Good',
-                      }"
-                      >{{ attendance.performance }}</span
-                    >
+                    <span :class="req.status === 'Approved' ? 'badge bg-success' : 'badge bg-danger'">
+                      {{ req.status }}
+                    </span>
                   </td>
                 </tr>
               </tbody>
@@ -165,163 +95,129 @@
         </div>
       </div>
 
-      <div class="col-12 mt-3">
-        <h4 class="text-secondary">Simulate New Request Submission (Employee Facing)</h4>
-        <p>
-          Click below to simulate an employee submitting a request for different types of leave.
-        </p>
-        <button class="btn btn-primary me-2 mb-2" @click="submitMockRequest('Annual Leave', 3, 4)">
-          Submit Annual Leave
-        </button>
-        <button class="btn btn-info me-2 mb-2" @click="submitMockRequest('Sick Leave', 1, 3)">
-          Submit Sick Leave
-        </button>
-        <button class="btn btn-dark me-2 mb-2" @click="submitMockRequest('Unpaid Leave', 5, 4)">
-          Submit Unpaid Leave
-        </button>
-
-        <button class="btn btn-outline-danger ms-3 mb-2" @click="resetRequests">
-          Reset Requests & Balances
-        </button>
+      <div class="col-12 mt-4">
+        <h4 class="text-secondary">Simulate New Database Entry</h4>
+        <button class="btn btn-primary me-2" @click="submitMockRequest('Annual', 3, 1)">Submit Sibongile's Annual Leave</button>
+        <button class="btn btn-info" @click="submitMockRequest('Sick', 1, 2)">Submit Lungile's Sick Leave</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import employeeInfoJSON from '@/data/employee_info.json'
-import payrollDataJSON from '@/data/payroll_data.json'
-
-let nextRequestId = 101
-
 export default {
   name: 'TimeOff',
   data() {
-    // --- Data initialization based on imported files
-    const initialLeaveBalances = employeeInfoJSON.employeeInformation.map((emp) => ({
-      employeeId: emp.employeeId,
-      name: emp.name,
-      annualBalance: 15,
-      sickBalance: 10,
-      familyBalance: 5,
-      unpaidBalance: 999,
-    }))
-
-    // Initial Requests: A single starting request to populate the table
-    const initialRequests = [
-      {
-        id: 100,
-        employeeId: 1,
-        name: 'Sibongile Nkosi',
-        startDate: '2026-03-01',
-        endDate: '2026-03-05',
-        typeOfLeave: 'Annual Leave',
-        status: 'Pending',
-      },
-    ]
-
-    // Mock Weekly Attendance: Derived from imported employee data
-    const initialAttendance = employeeInfoJSON.employeeInformation
-      .slice(0, 7)
-      .map((emp, index) => ({
-        employeeId: emp.employeeId,
-        week: 'Dec Week 1',
-        daysPresent: 5 - (index % 3),
-        daysLate: index % 3 > 0 ? 1 : 0,
-        performance: index % 3 === 0 ? 'Excellent' : 'Good',
-      }))
-
     return {
-      initialLeaveBalances: initialLeaveBalances, // Store for reset
-      initialRequests: initialRequests,
-
-      leaveBalances: JSON.parse(JSON.stringify(initialLeaveBalances)),
-      mockWeeklyAttendance: initialAttendance,
-      timeOffRequests: JSON.parse(JSON.stringify(initialRequests)),
-
-      leaveTypeMap: {
-        'Annual Leave': 'annualBalance',
-        'Sick Leave': 'sickBalance',
-        'Family Leave': 'familyBalance',
-        'Unpaid Leave': 'unpaidBalance',
-      },
+      loading: true, // Starts as true
+      error: null,
+      leaveBalances: [],
+      timeOffRequests: [],
+      // Matches your backend route
+      apiBase: 'http://localhost:5000/api'
     }
   },
   computed: {
     pendingRequests() {
-      return this.timeOffRequests.filter((req) => req.status === 'Pending')
+      return this.timeOffRequests.filter(req => req.status === 'Pending');
     },
+    processedRequests() {
+      return this.timeOffRequests.filter(req => req.status !== 'Pending');
+    }
+  },
+  // This triggers as soon as the page is ready
+  async mounted() {
+    await this.fetchData();
   },
   methods: {
-    getEmployeeName(employeeId) {
-      const emp = employeeInfoJSON.employeeInformation.find((e) => e.employeeId === employeeId)
-      return emp ? emp.name : 'Unknown'
+    async fetchData() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await fetch(`${this.apiBase}/timeoff`);
+        if (!response.ok) throw new Error('Failed to fetch from server');
+
+        const data = await response.json();
+
+        // 1. Map Leave Requests (Snake Case to Camel Case)
+        this.timeOffRequests = data.requests.map(r => ({
+          id: r.leave_id,
+          employeeId: r.employee_id,
+          name: r.name,
+          startDate: this.formatDate(r.start_date),
+          endDate: this.formatDate(r.end_date),
+          typeOfLeave: r.leave_type,
+          status: r.status
+        }));
+
+        // 2. Map Balances
+        this.leaveBalances = data.balances.map(b => ({
+          employeeId: b.employee_id,
+          name: b.name,
+          annualBalance: b.annual_leave,
+          sickBalance: b.sick_leave,
+          familyBalance: b.family_leave
+        }));
+
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.loading = false; // Stop the spinner
+      }
+    },
+
+    async updateRequestStatus(id, status) {
+      try {
+        const response = await fetch(`${this.apiBase}/timeoff/requests/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+
+        if (response.ok) {
+          // IMPORTANT: Re-fetch data.
+          // This ensures we see the balance deduction processed by your SQL Trigger!
+          await this.fetchData();
+        }
+      } catch (err) {
+        alert("Action failed: " + err.message);
+      }
+    },
+
+    async submitMockRequest(type, days, empId) {
+      const start = new Date();
+      const end = new Date();
+      end.setDate(start.getDate() + days);
+
+      const payload = {
+        employee_id: empId,
+        leave_type: type,
+        start_date: start.toISOString().split('T')[0],
+        end_date: end.toISOString().split('T')[0],
+        reason: "Simulated Request"
+      };
+
+      try {
+        await fetch(`${this.apiBase}/timeoff/requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        await this.fetchData();
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    formatDate(dateStr) {
+      return new Date(dateStr).toISOString().split('T')[0];
     },
 
     calculateDays(start, end) {
-      const startMs = new Date(start).getTime()
-      const endMs = new Date(end).getTime()
-      const diffDays = Math.ceil((endMs - startMs) / (1000 * 60 * 60 * 24))
-      return diffDays + 1
-    },
-
-    submitMockRequest(type, days, employeeIndex) {
-      // Select employee from the imported list
-      const employeeToUse = employeeInfoJSON.employeeInformation[employeeIndex || 4]
-
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() + 7)
-      const endDate = new Date(startDate)
-      endDate.setDate(startDate.getDate() + days - 1)
-
-      const newRequest = {
-        id: nextRequestId++,
-        employeeId: employeeToUse.employeeId,
-        name: employeeToUse.name,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        typeOfLeave: type,
-        status: 'Pending',
-      }
-      this.timeOffRequests.push(newRequest)
-      alert(`New ${type} request submitted by ${employeeToUse.name} and added to the Pending list.`)
-    },
-
-    approveRequest(request) {
-      const daysRequested = this.calculateDays(request.startDate, request.endDate)
-      const balanceKey = this.leaveTypeMap[request.typeOfLeave]
-      const balanceItem = this.leaveBalances.find((e) => e.employeeId === request.employeeId)
-
-      if (balanceItem && balanceKey) {
-        if (request.typeOfLeave === 'Unpaid Leave' || balanceItem[balanceKey] >= daysRequested) {
-          if (request.typeOfLeave !== 'Unpaid Leave') {
-            balanceItem[balanceKey] -= daysRequested
-          }
-
-          request.status = 'Approved'
-          alert(
-            `Request for ${request.name} (${request.typeOfLeave}) approved! Balance updated: -${daysRequested} days.`,
-          )
-        } else {
-          alert(
-            `Error: ${request.name} only has ${balanceItem[balanceKey]} days of ${request.typeOfLeave} left.`,
-          )
-        }
-      }
-    },
-
-    denyRequest(request) {
-      request.status = 'Denied'
-      alert(`Request for ${request.name} denied. Balance remains unchanged.`)
-    },
-
-    resetRequests() {
-      // Reset working arrays back to their initial states
-      this.timeOffRequests = JSON.parse(JSON.stringify(this.initialRequests))
-      this.leaveBalances = JSON.parse(JSON.stringify(this.initialLeaveBalances))
-      alert('Time Off requests and balances have been reset.')
-    },
-  },
+      const diff = new Date(end) - new Date(start);
+      return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
+    }
+  }
 }
 </script>
 

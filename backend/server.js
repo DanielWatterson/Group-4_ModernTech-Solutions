@@ -31,8 +31,8 @@ app.get('/', (req, res) => {
             health: '/api/health',
             dashboard: '/api/dashboard',
             employees: '/api/employees',
-            test: '/api/test'
-        }
+            payroll: '/api/payroll',
+            test: '/api/test'}
     });
 });
 

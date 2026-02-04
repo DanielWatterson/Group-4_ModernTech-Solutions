@@ -16,9 +16,14 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "axios": "^1.13.4",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "chart.js": "^4.5.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mysql2": "^3.16.3",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3"
   },
@@ -32,10 +37,24 @@
     "eslint-plugin-oxlint": "~1.29.0",
     "eslint-plugin-vue": "~10.5.1",
     "globals": "^16.5.0",
+    "nodemon": "^3.1.11",
     "npm-run-all2": "^8.0.4",
     "oxlint": "~1.29.0",
     "prettier": "3.6.2",
     "vite": "^7.2.4",
     "vite-plugin-vue-devtools": "^8.0.5"
-  }
+  },
+  "description": "This template should help get you started developing with Vue 3 in Vite.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DanielWatterson/Group-4_ModernTech-Solutions.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DanielWatterson/Group-4_ModernTech-Solutions/issues"
+  },
+  "homepage": "https://github.com/DanielWatterson/Group-4_ModernTech-Solutions#readme"
 }

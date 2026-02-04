@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 
 // Controllers
-const dashboardController = require('../controllers/dashboardController');
-const employeeController = require('../controllers/employeeController');
-const { login } = require('../controllers/authController');
-const payrollController = require('../controllers/payrollController');
-const timeoffController = require('../controllers/timeoffController');
+const dashboardController = require('../controllers/dashboardController.js');
+const employeeController = require('../controllers/employeeController.js');
+const { login } = require('../controllers/authController.js');
+const payrollController = require('../controllers/payrollController.js');
+const performanceController = require('../controllers/performanceController.js');
+const timeoffController = require('../controllers/timeoffController.js');
 
 // ========== TEST ROUTES ==========
 router.get('/test', (req, res) => {
@@ -47,5 +48,10 @@ router.get('/dashboard/kpis', dashboardController.getKPIs);
 // ========== EMPLOYEE ROUTES ==========
 router.get('/employees', employeeController.getAllEmployees);
 router.get('/employees/:id', employeeController.getEmployeeById);
+// ========== PERFOMANCE  ROUTES ==========
+router.get('/perfomances', performanceController.getAllPerformance);
+router.get('/perfomances/:id', performanceController.getPerformanceById);
+router.post('/perfomances', performanceController.createPerformance);
+router.patch('/perfomances/:id', performanceController.updatePerformance);
 
 module.exports = router;

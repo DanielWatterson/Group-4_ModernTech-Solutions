@@ -100,6 +100,7 @@ app.listen(PORT, () => {
     console.log(`✅ Backend server running on http://localhost:${PORT}`);
     console.log(`📊 Dashboard: http://localhost:${PORT}/api/dashboard`);
     console.log(`👥 Employees: http://localhost:${PORT}/api/employees`);
+    console.log(`👥 Perfomances: http://localhost:${PORT}/api/perfomances`);
     console.log(`🏥 Health: http://localhost:${PORT}/api/health`);
     console.log(`🔄 Test: http://localhost:${PORT}/api/test`);
 });

@@ -159,11 +159,11 @@
                 <option value="">All Departments</option>
                 <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
               </select>
-              <input 
-                type="text" 
-                v-model="searchQuery" 
-                class="form-control form-control-sm" 
-                placeholder="Search employees..." 
+              <input
+                type="text"
+                v-model="searchQuery"
+                class="form-control form-control-sm"
+                placeholder="Search employees..."
                 style="width: 200px;"
               />
             </div>
@@ -185,8 +185,8 @@
                   <tr v-for="review in filteredReviews" :key="review.review_id">
                     <td>
                       <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" 
-                             style="width: 40px; height: 40px;">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
+                            style="width: 40px; height: 40px;">
                           {{ getInitials(review.employee_name || review.employeeName) }}
                         </div>
                         <div>
@@ -202,8 +202,8 @@
                     </td>
                     <td>
                       <div class="progress" style="height: 8px; width: 100px;">
-                        <div 
-                          class="progress-bar" 
+                        <div
+                          class="progress-bar"
                           :class="getScoreClass(review.score)"
                           :style="{ width: review.score + '%' }"
                           role="progressbar"
@@ -227,7 +227,7 @@
                   </tr>
                 </tbody>
               </table>
-              
+
               <!-- No Results -->
               <div v-if="filteredReviews.length === 0" class="text-center py-5">
                 <i class="bi bi-graph-up fs-1 text-muted mb-3"></i>
@@ -242,7 +242,7 @@
         <div class="mt-4 pt-3 border-top">
           <div class="d-flex justify-content-between align-items-center">
             <div class="text-muted small">
-              <i class="bi bi-database me-1"></i> Connected to MySQL database | 
+              <i class="bi bi-database me-1"></i> Connected to MySQL database |
               Showing {{ filteredReviews.length }} of {{ performanceData.length }} reviews
             </div>
             <button @click="fetchPerformanceData" class="btn btn-link text-decoration-none">
@@ -262,7 +262,7 @@ import Chart from 'chart.js/auto';
 
 export default {
   name: 'Performance',
-  
+
   setup() {
     const performanceData = ref([]);
     const employees = ref([]);
@@ -270,11 +270,11 @@ export default {
     const error = ref(null);
     const searchQuery = ref('');
     const selectedDepartment = ref('');
-    
+
     // Chart references
     const scoreChart = ref(null);
     const statusChart = ref(null);
-    
+
     // Chart instances
     let scoreChartInstance = null;
     let statusChartInstance = null;
@@ -310,13 +310,13 @@ export default {
 
     const filteredReviews = computed(() => {
       return performanceData.value.filter(review => {
-        const matchesSearch = searchQuery.value === '' || 
+        const matchesSearch = searchQuery.value === '' ||
           (review.employee_name || '').toLowerCase().includes(searchQuery.value.toLowerCase()) ||
           (review.employeeName || '').toLowerCase().includes(searchQuery.value.toLowerCase());
-        
-        const matchesDept = selectedDepartment.value === '' || 
+
+        const matchesDept = selectedDepartment.value === '' ||
           review.department === selectedDepartment.value;
-        
+
         return matchesSearch && matchesDept;
       });
     });
@@ -325,11 +325,11 @@ export default {
     const fetchPerformanceData = async () => {
       loading.value = true;
       error.value = null;
-      
+
       try {
         const response = await apiService.getPerformance();
         console.log('Performance API response:', response);
-        
+
         if (response.success && response.data) {
           performanceData.value = response.data;
         } else if (Array.isArray(response)) {
@@ -337,19 +337,19 @@ export default {
         } else {
           throw new Error('Unexpected API response format');
         }
-        
+
         // Fetch employees for additional info
         await fetchEmployees();
-        
+
         // Render charts after data is loaded
         setTimeout(() => {
           renderCharts();
         }, 100);
-        
+
       } catch (err) {
         console.error('Failed to fetch performance data:', err);
         error.value = 'Unable to load performance data. Please check your connection.';
-        
+
         // Fallback to empty array
         performanceData.value = [];
       } finally {
@@ -381,7 +381,7 @@ export default {
     };
 
     const getEmployeeInfo = (employeeId) => {
-      const employee = employees.value.find(emp => 
+      const employee = employees.value.find(emp =>
         emp.employee_id === employeeId || emp.employeeId === employeeId
       );
       return employee ? employee.position || 'N/A' : 'N/A';
@@ -423,10 +423,10 @@ export default {
       if (!dateString) return 'N/A';
       try {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
         });
       } catch (e) {
         return dateString;
@@ -687,7 +687,7 @@ export default {
   .performance {
     padding: 15px;
   }
-  
+
   .card-body {
     padding: 1rem !important;
   }

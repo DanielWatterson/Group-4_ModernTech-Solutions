@@ -4,19 +4,19 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       success: false,
-      message: 'Email and password are required' 
+      message: 'Email and password are required'
     });
   }
 
   try {
     // Direct database query to match your SQL structure
     const [users] = await db.query(
-      `SELECT user_id, name, role, department, email, avatar, password_hash 
-       FROM users 
-       WHERE email = ? 
-       LIMIT 1`,
+      `SELECT user_id, name, role, department, email, avatar, password_hash
+      FROM users
+      WHERE email = ?
+      LIMIT 1`,
       [email]
     );
 
@@ -28,7 +28,7 @@ exports.login = async (req, res) => {
     }
 
     const user = users[0];
-    
+
     // Check password (plain text comparison as in your SQL)
     if (user.password_hash !== password) {
       return res.status(401).json({

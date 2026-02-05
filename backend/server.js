@@ -22,7 +22,7 @@ app.use('/api', apiRoutes);
 
 // Test route
 app.get('/api/test', (req, res) => {
-    res.json({ 
+    res.json({
         message: 'Backend is working!',
         timestamp: new Date().toISOString(),
         database: 'MySQL'
@@ -74,14 +74,16 @@ app.use('*', (req, res) => {
         error: 'Endpoint not found',
         path: req.originalUrl,
         availableEndpoints: [
-            'GET /api/employees',
-            'GET /api/employees/:id',
-            'GET /api/dashboard',
-            'GET /api/health',
-            'GET /api/performance',
-            'GET /api/payroll',
-            'GET /api/timeoff'
-        ]
+          'GET /api/employees',
+          'GET /api/employees/:id',
+          'POST /api/employees',
+          'PATCH /api/employees/:id',
+          'GET /api/dashboard',
+          'GET /api/health',
+          'GET /api/performance',
+          'GET /api/payroll',
+          'GET /api/timeoff'
+]
     });
 });
 
@@ -100,7 +102,6 @@ app.listen(PORT, () => {
     console.log(`✅ Backend server running on http://localhost:${PORT}`);
     console.log(`📊 Dashboard: http://localhost:${PORT}/api/dashboard`);
     console.log(`👥 Employees: http://localhost:${PORT}/api/employees`);
-    console.log(`👥 Perfomances: http://localhost:${PORT}/api/perfomances`);
     console.log(`🏥 Health: http://localhost:${PORT}/api/health`);
     console.log(`🔄 Test: http://localhost:${PORT}/api/test`);
 });

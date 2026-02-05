@@ -5,18 +5,39 @@
 
       <form @submit.prevent="login">
         <div class="mb-3">
-          <label>Email</label>
-          <input v-model="email" type="email" class="form-control modern-input" required />
+          <label class="text-white">Email</label>
+          <input v-model="email" type="email" class="form-control modern-input" required 
+                 placeholder="e.g., SerenaMC@moderntech.com" />
         </div>
 
-        <div class="mb-3">
-          <label>Password</label>
-          <input v-model="password" type="password" class="form-control modern-input" required />
+        <div class="mb-4">
+          <label class="text-white">Password</label>
+          <input v-model="password" type="password" class="form-control modern-input" required 
+                 placeholder="Enter password" />
         </div>
 
-        <button type="submit" class="btn login-btn w-100">Login</button>
+        <button type="submit" class="btn login-btn w-100" :disabled="loading">
+          <span v-if="loading">
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            Logging in...
+          </span>
+          <span v-else>
+            Login <i class="bi bi-box-arrow-in-right ms-2"></i>
+          </span>
+        </button>
 
-        <p v-if="error" class="text-danger mt-3">{{ error }}</p>
+        <div v-if="error" class="alert alert-danger mt-3 mb-0">
+          <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+        </div>
+        
+        <!-- Demo Credentials -->
+        <div class="mt-4 pt-3 border-top">
+          <p class="text-white-50 small mb-2">Demo Credentials:</p>
+          <div class="text-white small">
+            <div>Email: SerenaMC@moderntech.com</div>
+            <div>Password: admin123</div>
+          </div>
+        </div>
       </form>
     </div>
   </div>
@@ -28,38 +49,53 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const router = useRouter()
-const email = ref('')
-const password = ref('')
+const email = ref('SerenaMC@moderntech.com')
+const password = ref('admin123')
 const error = ref('')
+const loading = ref(false)
 
 async function login() {
+  loading.value = true
+  error.value = ''
+  
   try {
     const response = await axios.post('http://localhost:5000/api/login', {
       email: email.value,
-      password: password.value,
+      password: password.value
     })
 
-    const user = response.data
+    if (response.data.success) {
+      const user = response.data.data
+      
+      // Store user info in localStorage
+      localStorage.setItem('loggedIn', 'true')
+      localStorage.setItem('userName', user.name)
+      localStorage.setItem('userRole', user.role)
+      localStorage.setItem('userDepartment', user.department)
+      localStorage.setItem('userEmail', user.email)
+      localStorage.setItem('userAvatar', user.avatar)
+      localStorage.setItem('userId', user.id)
 
-    localStorage.setItem('loggedIn', 'true')
-    localStorage.setItem('userName', user.name)
-    localStorage.setItem('userRole', user.role)
-    localStorage.setItem('userDepartment', user.department)
-    localStorage.setItem('userEmail', user.email)
-    localStorage.setItem('userAvatar', user.avatar)
-
-    window.dispatchEvent(new Event('userChanged'))
-    router.push('/home')
-  } catch (err) {
-    if (err.response && err.response.status === 401) {
-      error.value = 'Invalid email or password.'
+      // Redirect to home
+      router.push('/home')
     } else {
-      error.value = 'Server error. Please try again later.'
+      error.value = response.data.message || 'Login failed'
     }
+  } catch (err) {
+    console.error('Login error:', err)
+    
+    if (err.response) {
+      error.value = err.response.data?.message || `Error: ${err.response.status}`
+    } else if (err.request) {
+      error.value = 'Cannot connect to server. Make sure backend is running on port 5000.'
+    } else {
+      error.value = 'Login failed. Please try again.'
+    }
+  } finally {
+    loading.value = false
   }
 }
 </script>
-
 
 <style scoped>
 /* ------------------------- */

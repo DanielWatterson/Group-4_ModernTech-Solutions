@@ -55,12 +55,16 @@ router.patch('/employees/:id', employeeController.updateEmployee);
 
 // ========== PAYROLL ROUTES ==========
 router.get('/payroll', payrollController.getPayrollData);
-router.post('/payroll/calculate', payrollController.calculateAll);
+router.post('/payroll/calculate-all', payrollController.calculateAll);
+router.post('/payroll/reset', payrollController.resetPayroll);
 
 // ========== TIME OFF ROUTES ==========
 router.get('/timeoff', timeoffController.getTimeOffData);
 router.get('/timeoff/balances', timeoffController.getLeaveBalances);
-
+router.put('/timeoff/requests/:id', timeoffController.updateRequestStatus);
+router.post('/timeoff/requests', timeoffController.submitRequest);
+router.delete('/timeoff/requests/:id', timeoffController.deleteRequest);
+router.delete('/timeoff/clear-pending', timeoffController.clearPending);
 // ========== PERFORMANCE ROUTES ==========
 router.get('/performance', async (req, res) => {
     try {
@@ -87,6 +91,7 @@ router.get('/performance', async (req, res) => {
     }
 });
 
+module.exports = router;
 // ========== AUTH ROUTES ==========
 router.post('/login', authController.login);
 

@@ -29,7 +29,7 @@
           {{ allCalculated ? 'Payroll Fully Processed' : 'Run Payroll Simulation' }}
         </button>
         <button class="btn btn-outline-light" @click="resetPayroll">
-          <i class="bi bi-arrow-clockwise me-1"></i> Reset Payroll Data
+          <i class="bi bi-arrow-clockwise me-1"></i> Reset All Payroll Data
         </button>
       </div>
 
@@ -77,9 +77,6 @@
             </tr>
           </tbody>
         </table>
-        <div v-if="employeesWithPayData.length === 0" class="p-5 text-center text-white-50">
-          No employee records found in the system.
-        </div>
       </div>
     </div>
 
@@ -148,8 +145,8 @@ export default {
   computed: {
     allCalculated() {
       return this.employeesWithPayData.length > 0 &&
-             this.employeesWithPayData.every((emp) => emp.isCalculated)
-    },
+            this.employeesWithPayData.every((emp) => emp.isCalculated)
+    }
   },
   async mounted() {
     await this.fetchPayrollData();
@@ -161,22 +158,19 @@ export default {
       try {
         const response = await fetch(this.apiBase);
         if (!response.ok) throw new Error('Could not connect to Payroll API');
-
         const data = await response.json();
 
-        // Data Mapping: Backend SQL to Frontend CamelCase
         this.employeesWithPayData = data.map(emp => ({
           employeeId: emp.employee_id,
           name: emp.name,
           position: emp.position,
-          salary: parseFloat(emp.salary),
+          salary: parseFloat(emp.salary) || 0,
           hoursWorked: emp.hours_worked || 160,
           leaveDeductions: emp.leave_deductions || 0,
-          grossPayAfterLeave: parseFloat(emp.gross_salary) || 0,
-          taxes: parseFloat(emp.tax_amount) || 0,
-          netPay: parseFloat(emp.net_salary) || 0,
-          isCalculated: emp.net_salary !== null && emp.net_salary > 0,
-          // Calculate leave cost for the payslip display
+          grossPayAfterLeave: parseFloat(emp.gross_pay) || 0,
+          taxes: parseFloat(emp.tax_deductions) || 0,
+          netPay: parseFloat(emp.net_pay) || 0,
+          isCalculated: emp.net_pay !== null && parseFloat(emp.net_pay) > 0,
           leaveCost: (parseFloat(emp.salary) / 22) * (emp.leave_deductions || 0)
         }));
       } catch (err) {
@@ -188,16 +182,13 @@ export default {
 
     async runPayrollSimulation() {
       try {
-        // Trigger the "Calculate All" endpoint we built for your model
-        const response = await fetch(`${this.apiBase}/calculate-all`, {
-          method: 'POST'
-        });
-
+        const response = await fetch(`${this.apiBase}/calculate-all`, { method: 'POST' });
+        const result = await response.json();
         if (response.ok) {
-          await this.fetchPayrollData(); // Refresh UI with actual DB numbers
-          alert('Success: Database payroll tables updated.');
+          await this.fetchPayrollData();
+          alert('Success: ' + result.message);
         } else {
-          throw new Error('Server failed to process calculations');
+          throw new Error(result.error || 'Server failed to process calculations');
         }
       } catch (err) {
         alert("Action failed: " + err.message);
@@ -208,12 +199,29 @@ export default {
       this.selectedPayslip = employee;
       this.showPayslipModal = true;
     },
+  async resetPayroll() {
+  if (!confirm("Are you sure you want to delete ALL processed payroll data? This cannot be undone.")) {
+    return;
+  }
 
-    resetPayroll() {
-        alert("Reset functionality requires a DELETE endpoint in the backend to clear the payroll table.");
+  try {
+    const response = await fetch(`${this.apiBase}/reset`, {
+      method: 'POST'
+    });
+
+    if (response.ok) {
+      await this.fetchPayrollData(); // This refreshes the table to show '—'
+      alert("Payroll data reset successfully. You can now run the simulation again.");
+    } else {
+      throw new Error('Failed to reset payroll data.');
     }
-  },
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
 }
+}
+}
+
 </script>
 
 <style scoped>

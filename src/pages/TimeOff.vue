@@ -1,154 +1,418 @@
 <template>
-  <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="h4 mb-0">Time Off Management</h2>
-      <button
-        @click="fetchData"
-        class="btn btn-outline-secondary d-flex align-items-center"
-        :disabled="loading"
-      >
-        <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-        <i v-else class="bi bi-arrow-clockwise me-2"></i>
-        Refresh Data
-      </button>
-    </div>
-    <p class="lead">Manage employee leave requests and balances in real-time.</p>
-
-    <div class="card border-primary mb-4 shadow-sm">
-      <div class="card-header bg-primary text-white fw-bold">Global Time-Off Entry</div>
-      <div class="card-body">
-        <div class="row align-items-end">
-          <div class="col-md-5">
-            <label class="form-label small fw-bold text-uppercase">Select Leave Type</label>
-            <select v-model="selectedBulkType" class="form-select">
-              <option value="Annual">Annual Leave</option>
-              <option value="Sick">Sick Leave</option>
-              <option value="Family">Family Leave</option>
-              <option value="Unpaid">Unpaid Leave</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <button @click="submitBulkLeave" class="btn btn-primary w-100" :disabled="loading">
-              <i class="bi bi-send-plus me-2"></i> Submit for All Employees
+  <div class="timeoff">
+    <div class="container-fluid">
+      <!-- Header -->
+      <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+          <h1 class="h2 fw-bold mb-2">Time Off Management</h1>
+          <p class="text-muted mb-0">Manage employee leave requests and balances in real-time</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <div class="d-flex align-items-center justify-content-md-end gap-3">
+            <span class="badge bg-success">
+              <i class="bi bi-calendar-check me-1"></i> Live Database
+            </span>
+            <button @click="fetchData" class="btn btn-outline-primary btn-sm" :disabled="loading">
+              <i class="bi bi-arrow-clockwise"></i> Refresh
             </button>
           </div>
         </div>
       </div>
-    </div>
 
-    <div v-if="loading && !timeOffRequests.length" class="text-center my-5">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2 text-muted">Synchronizing with HR Database...</p>
-    </div>
+      <!-- Loading State -->
+      <div v-if="loading" class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 text-muted">Synchronizing with HR database...</p>
+        </div>
+      </div>
 
-    <div v-else-if="error" class="alert alert-danger">
-      <strong>Error:</strong> {{ error }}
-      <button class="btn btn-sm btn-outline-danger ms-3" @click="fetchData">Retry</button>
-    </div>
+      <!-- Error State -->
+      <div v-else-if="error" class="alert alert-danger alert-dismissible fade show">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle me-3 fs-4 flex-shrink-0"></i>
+          <div class="flex-grow-1">
+            <h5 class="alert-heading mb-2">Connection Error</h5>
+            <p class="mb-3">{{ error }}</p>
+            <div>
+              <button @click="fetchData" class="btn btn-primary btn-sm">Retry Connection</button>
+            </div>
+          </div>
+          <button type="button" class="btn-close" @click="error = null"></button>
+        </div>
+      </div>
 
-    <div v-else class="row">
-      <div class="col-lg-5 mb-4">
-        <div class="card bg-light h-100">
-          <div class="card-header fw-bold">Current Employee Leave Balances</div>
-          <ul class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto">
-            <li class="list-group-item" v-for="balance in leaveBalances" :key="balance.employeeId">
-              <span class="fw-bold">{{ balance.name }}</span>
-              <div class="row small mt-1">
-                <div class="col-6">Annual: <span class="badge bg-success">{{ balance.annualBalance }} days</span></div>
-                <div class="col-6">Sick: <span class="badge bg-warning text-dark">{{ balance.sickBalance }} days</span></div>
-                <div class="col-6">Family: <span class="badge bg-info">{{ balance.familyBalance }} days</span></div>
-                <div class="col-6">Unpaid: <span class="badge bg-secondary">Tracked</span></div>
+      <!-- Main Content -->
+      <div v-else>
+        <!-- KPI Cards -->
+        <div class="row g-3 mb-4">
+          <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
+                    <i class="bi bi-clock-history text-primary fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="text-muted mb-0 small">Pending Requests</h6>
+                    <h3 class="fw-bold mb-0 text-primary">{{ pendingCount }}</h3>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">Awaiting approval</p>
               </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-lg-7 mb-4">
-        <div class="card h-100">
-          <div class="card-header bg-warning fw-bold text-white">
-            Pending Time Off Requests ({{ temporaryRequests.length }})
+            </div>
           </div>
-          <div class="table-responsive">
-            <table class="table table-sm mb-0 align-middle">
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Leave Type</th>
-                  <th>Days</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="request in temporaryRequests" :key="request.id">
-                  <td>{{ request.name }}</td>
-                  <td><span class="badge bg-primary">{{ request.typeOfLeave }}</span></td>
-                  <td>{{ calculateDays(request.startDate, request.endDate) }}</td>
-                  <td>
-                    <button class="btn btn-sm btn-success me-2" @click="approveRequest(request)">Approve</button>
-                    <button class="btn btn-sm btn-danger" @click="discardRequest(request.id)">Deny</button>
-                  </td>
-                </tr>
-                <tr v-if="!temporaryRequests.length">
-                  <td colspan="4" class="p-4 text-muted text-center italic">No pending requests found. (Refresh to clear)</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
 
-      <div class="col-12 mt-4">
-        <div class="card shadow-sm">
-          <div class="card-header bg-success fw-bold text-white">Leave Status History</div>
-          <div class="table-responsive">
-            <table class="table table-sm mb-0 align-middle table-hover">
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Leave Type</th>
-                  <th>Dates</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="req in processedRequests" :key="req.id">
-                  <td>{{ req.name }}</td>
-                  <td>{{ req.typeOfLeave }}</td>
-                  <td>{{ req.startDate }} → {{ req.endDate }}</td>
-                  <td>
-                    <span :class="req.status === 'Approved' ? 'badge bg-success' : 'badge bg-danger'">{{ req.status }}</span>
-                  </td>
-                  <td>
-                    <button class="btn btn-sm btn-outline-danger" @click="deleteRecord(req.id)">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle bg-success bg-opacity-10 p-2 me-3">
+                    <i class="bi bi-check-circle text-success fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="text-muted mb-0 small">Approved This Month</h6>
+                    <h3 class="fw-bold mb-0 text-success">{{ approvedCount }}</h3>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">Leave days approved</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle bg-warning bg-opacity-10 p-2 me-3">
+                    <i class="bi bi-calendar-week text-warning fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="text-muted mb-0 small">Total Leave Days</h6>
+                    <h3 class="fw-bold mb-0 text-warning">{{ totalLeaveDays }}</h3>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">All types combined</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle bg-info bg-opacity-10 p-2 me-3">
+                    <i class="bi bi-people text-info fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="text-muted mb-0 small">Employees on Leave</h6>
+                    <h3 class="fw-bold mb-0 text-info">{{ onLeaveCount }}</h3>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">Currently absent</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="col-12 mt-4">
-        <div class="card shadow-sm">
-          <div class="card-header bg-info fw-bold text-white">Employee Attendance Logs</div>
+        <!-- Bulk Leave Action -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0">
+              <i class="bi bi-lightning text-primary me-2"></i>Quick Actions
+            </h5>
+          </div>
           <div class="card-body">
-            <div class="row">
-              <div v-for="group in attendanceGroups" :key="group.name" class="col-md-4 mb-3">
-                <div class="border rounded p-3 bg-white shadow-xs">
-                  <h6 class="fw-bold border-bottom pb-2 mb-2 text-dark">{{ group.name }}</h6>
-                  <div v-for="log in group.records" :key="log.date" class="d-flex justify-content-between small py-1">
-                    <span>{{ formatDate(log.date) }}</span>
-                    <span :class="log.status === 'Present' ? 'text-success fw-bold' : 'text-danger fw-bold'">
-                      {{ log.status }}
-                    </span>
+            <div class="row align-items-end">
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-uppercase">Select Leave Type</label>
+                <select v-model="selectedBulkType" class="form-select">
+                  <option value="Annual">Annual Leave</option>
+                  <option value="Sick">Sick Leave</option>
+                  <option value="Family">Family Leave</option>
+                  <option value="Unpaid">Unpaid Leave</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <button @click="submitBulkLeave" class="btn btn-primary w-100" :disabled="loading">
+                  <i class="bi bi-send-plus me-2"></i> Submit for All
+                </button>
+              </div>
+              <div class="col-md-5 text-md-end">
+                <div class="text-muted small">
+                  <i class="bi bi-info-circle me-1"></i>
+                  This will add pending leave for all employees
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Requests & Leave Balances -->
+        <div class="row g-4 mb-4">
+          <!-- Pending Requests -->
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                  <i class="bi bi-clock-history text-primary me-2"></i>Pending Requests
+                  <span class="badge bg-primary ms-2">{{ temporaryRequests.length }}</span>
+                </h5>
+                <button @click="clearAllPending" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash me-1"></i> Clear All
+                </button>
+              </div>
+              <div class="card-body">
+                <div v-if="temporaryRequests.length > 0" class="table-responsive">
+                  <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Duration</th>
+                        <th>Dates</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="request in temporaryRequests" :key="request.id">
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 40px; height: 40px;">
+                              {{ getInitials(request.name) }}
+                            </div>
+                            <div>
+                              <div class="fw-bold">{{ request.name }}</div>
+                              <small class="text-muted">ID: {{ request.employeeId }}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge" :class="getLeaveTypeClass(request.typeOfLeave)">
+                            {{ request.typeOfLeave }}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="fw-medium">{{ calculateDays(request.startDate, request.endDate) }} days</span>
+                        </td>
+                        <td>
+                          <small>{{ formatDate(request.startDate) }} → {{ formatDate(request.endDate) }}</small>
+                        </td>
+                        <td>
+                          <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-success" @click="approveRequest(request)">
+                              <i class="bi bi-check-lg"></i> Approve
+                            </button>
+                            <button class="btn btn-sm btn-danger" @click="discardRequest(request.id)">
+                              <i class="bi bi-x-lg"></i> Deny
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div v-else class="text-center py-5">
+                  <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+                  <h5 class="text-muted mb-2">No pending requests</h5>
+                  <p class="text-muted mb-0">All requests have been processed</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Leave Balances -->
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                  <i class="bi bi-wallet2 text-primary me-2"></i>Leave Balances Overview
+                </h5>
+              </div>
+              <div class="card-body" style="max-height: 400px; overflow-y: auto">
+                <div class="list-group list-group-flush">
+                  <div v-for="balance in leaveBalances.slice(0, 8)" :key="balance.employeeId" 
+                       class="list-group-item border-0 px-0 py-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <div class="fw-bold">{{ balance.name }}</div>
+                        <small class="text-muted">ID: {{ balance.employeeId }}</small>
+                      </div>
+                      <span class="badge bg-light text-dark">{{ getTotalBalance(balance) }} days</span>
+                    </div>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <div class="d-flex align-items-center">
+                          <div class="rounded-circle bg-success bg-opacity-10 p-1 me-2">
+                            <i class="bi bi-sun text-success" style="font-size: 0.8rem;"></i>
+                          </div>
+                          <span class="small">Annual: <strong>{{ balance.annualBalance }}</strong></span>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="d-flex align-items-center">
+                          <div class="rounded-circle bg-warning bg-opacity-10 p-1 me-2">
+                            <i class="bi bi-heart-pulse text-warning" style="font-size: 0.8rem;"></i>
+                          </div>
+                          <span class="small">Sick: <strong>{{ balance.sickBalance }}</strong></span>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="d-flex align-items-center">
+                          <div class="rounded-circle bg-info bg-opacity-10 p-1 me-2">
+                            <i class="bi bi-people text-info" style="font-size: 0.8rem;"></i>
+                          </div>
+                          <span class="small">Family: <strong>{{ balance.familyBalance }}</strong></span>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="d-flex align-items-center">
+                          <div class="rounded-circle bg-secondary bg-opacity-10 p-1 me-2">
+                            <i class="bi bi-calendar-x text-secondary" style="font-size: 0.8rem;"></i>
+                          </div>
+                          <span class="small">Unpaid: <strong>∞</strong></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="leaveBalances.length > 8" class="text-center pt-3 border-top">
+                  <small class="text-muted">+{{ leaveBalances.length - 8 }} more employees</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leave History & Attendance -->
+        <div class="row g-4">
+          <!-- Leave History -->
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                  <i class="bi bi-clock-history text-primary me-2"></i>Leave History
+                </h5>
+                <select v-model="historyFilter" class="form-select form-select-sm" style="width: auto;">
+                  <option value="">All Status</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Dates</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="req in filteredHistory" :key="req.id">
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 40px; height: 40px;">
+                              {{ getInitials(req.name) }}
+                            </div>
+                            <div>
+                              <div class="fw-bold">{{ req.name }}</div>
+                              <small class="text-muted">ID: {{ req.employeeId }}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge" :class="getLeaveTypeClass(req.typeOfLeave)">
+                            {{ req.typeOfLeave }}
+                          </span>
+                        </td>
+                        <td>{{ calculateDays(req.startDate, req.endDate) }} days</td>
+                        <td>
+                          <span :class="req.status === 'Approved' ? 'badge bg-success' : 'badge bg-danger'">
+                            {{ req.status }}
+                          </span>
+                        </td>
+                        <td>
+                          <small>{{ formatDate(req.startDate) }} → {{ formatDate(req.endDate) }}</small>
+                        </td>
+                        <td>
+                          <button class="btn btn-sm btn-outline-danger" @click="deleteRecord(req.id)">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div v-if="filteredHistory.length === 0" class="text-center py-5">
+                    <i class="bi bi-calendar3 fs-1 text-muted mb-3"></i>
+                    <h5 class="text-muted mb-2">No leave history found</h5>
+                    <p class="text-muted mb-0">Try adjusting your filter criteria</p>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Attendance Logs -->
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                  <i class="bi bi-calendar-check text-primary me-2"></i>Recent Attendance
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="list-group list-group-flush">
+                  <div v-for="group in attendanceGroups.slice(0, 5)" :key="group.name" 
+                       class="list-group-item border-0 px-0 py-3">
+                    <div class="d-flex align-items-center mb-3">
+                      <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" 
+                           style="width: 40px; height: 40px;">
+                        {{ getInitials(group.name) }}
+                      </div>
+                      <div>
+                        <div class="fw-bold">{{ group.name }}</div>
+                        <small class="text-muted">{{ group.records.length }} records</small>
+                      </div>
+                    </div>
+                    <div class="row g-2">
+                      <div v-for="log in group.records.slice(0, 3)" :key="log.date" class="col-12">
+                        <div class="d-flex justify-content-between align-items-center py-2 px-3 bg-light rounded">
+                          <small>{{ formatDate(log.date) }}</small>
+                          <span :class="log.status === 'Present' ? 'badge bg-success' : 'badge bg-danger'">
+                            {{ log.status }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="attendanceGroups.length > 5" class="text-center pt-3 border-top">
+                  <small class="text-muted">+{{ attendanceGroups.length - 5 }} more employees</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Footer -->
+        <div class="mt-4 pt-3 border-top">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="text-muted small">
+              <i class="bi bi-database me-1"></i> Connected to MySQL database | 
+              Showing {{ filteredHistory.length }} of {{ processedRequests.length }} historical records
+            </div>
+            <button @click="fetchData" class="btn btn-link text-decoration-none">
+              <i class="bi bi-arrow-clockwise me-1"></i>Refresh Data
+            </button>
           </div>
         </div>
       </div>
@@ -165,16 +429,39 @@ export default {
       error: null,
       leaveBalances: [],
       timeOffRequests: [],
-      temporaryRequests: [], // New staging list
+      temporaryRequests: [],
       attendanceGroups: [],
       apiBase: 'http://localhost:5000/api',
-      selectedBulkType: 'Annual'
+      selectedBulkType: 'Annual',
+      historyFilter: ''
     }
   },
   computed: {
-    // Only processed items coming from the DB history
     processedRequests() {
       return this.timeOffRequests.filter(req => req.status !== 'Pending');
+    },
+    filteredHistory() {
+      if (!this.historyFilter) return this.processedRequests;
+      return this.processedRequests.filter(req => req.status === this.historyFilter);
+    },
+    pendingCount() {
+      return this.temporaryRequests.length;
+    },
+    approvedCount() {
+      return this.processedRequests.filter(req => req.status === 'Approved').length;
+    },
+    totalLeaveDays() {
+      return this.processedRequests.reduce((total, req) => {
+        return total + this.calculateDays(req.startDate, req.endDate);
+      }, 0);
+    },
+    onLeaveCount() {
+      const today = new Date().toISOString().split('T')[0];
+      return this.processedRequests.filter(req => {
+        return req.status === 'Approved' &&
+               req.startDate <= today &&
+               req.endDate >= today;
+      }).length;
     }
   },
   async mounted() {
@@ -184,7 +471,6 @@ export default {
     async fetchData() {
       this.loading = true;
       this.error = null;
-      this.temporaryRequests = []; // Clears the new requests dashboard on refresh
 
       try {
         const response = await fetch(`${this.apiBase}/timeoff`);
@@ -230,7 +516,6 @@ export default {
       }
     },
 
-    // New: Simply adds to the UI list. Does NOT touch the database.
     submitBulkLeave() {
       const type = this.selectedBulkType;
       const today = new Date().toISOString().split('T')[0];
@@ -247,7 +532,6 @@ export default {
       this.temporaryRequests = [...this.temporaryRequests, ...newBatch];
     },
 
-    // New: This actually inserts the record into the database when approved
     async approveRequest(req) {
       try {
         const response = await fetch(`${this.apiBase}/timeoff/requests`, {
@@ -264,7 +548,6 @@ export default {
         });
 
         if (response.ok) {
-          // Remove from the temporary UI list and update DB data
           this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
           await this.fetchData();
         }
@@ -273,9 +556,13 @@ export default {
       }
     },
 
-    // New: Just removes the item from your screen
     discardRequest(id) {
       this.temporaryRequests = this.temporaryRequests.filter(req => req.id !== id);
+    },
+
+    async clearAllPending() {
+      if (!confirm("Clear all pending requests?")) return;
+      this.temporaryRequests = [];
     },
 
     async deleteRecord(id) {
@@ -296,251 +583,154 @@ export default {
     calculateDays(start, end) {
       const diff = new Date(end) - new Date(start);
       return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
+    },
+
+    getInitials(name) {
+      if (!name) return '??';
+      return name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    },
+
+    getLeaveTypeClass(type) {
+      const classes = {
+        'Annual': 'bg-success',
+        'Sick': 'bg-warning text-dark',
+        'Family': 'bg-info',
+        'Unpaid': 'bg-secondary'
+      };
+      return classes[type] || 'bg-light text-dark';
+    },
+
+    getTotalBalance(balance) {
+      return balance.annualBalance + balance.sickBalance + balance.familyBalance;
     }
   }
 }
 </script>
 
 <style scoped>
-/* ------------------------ */
-/* Main container and page */
-.container {
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-  padding: 60px 20px;
-  background:
-    linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
-    url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')
-      center/cover no-repeat;
-  color: #fff;
-  animation: fadeIn 0.8s ease-out;
+.timeoff {
+  background: #f8f9fa;
+  min-height: calc(100vh - 56px);
+  padding: 20px;
 }
 
-/* Page header */
-h2 {
-  color: #ffffff;
-  margin-bottom: 10px;
-}
-
-p.lead {
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 30px;
-}
-
-/* Glassy card style */
 .card {
-  background: rgba(24, 40, 72, 0.5);
-  backdrop-filter: blur(15px);
-  border-radius: 20px;
-  border: 1px solid rgba(75, 108, 183, 0.7);
-  transition: 0.3s ease;
-  color: #fff;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
-  background: rgba(75, 108, 183, 0.6);
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Card headers */
-.card-header {
-  background: rgba(24, 40, 72, 0.7) !important;
-  backdrop-filter: blur(12px);
-  color: #fff;
-  font-weight: 600;
-  border-bottom: 1px solid rgba(75, 108, 183, 0.7);
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
 }
 
-/* Card containing the leave balances */
-.card.bg-light {
-  background: rgba(24, 40, 72, 0.5) !important;
-  border: 1px solid rgba(75, 108, 183, 0.7);
-  color: #fff !important;
-  backdrop-filter: blur(15px);
-}
-
-/* Card header of leave balances */
-.card.bg-light .card-header {
-  background: rgba(24, 40, 72, 0.7) !important;
-  color: #fff;
-  border-bottom: 1px solid rgba(75, 108, 183, 0.7);
-  backdrop-filter: blur(12px);
-}
-
-.list-group-item {
-  background: rgba(24, 40, 72, 0.4) !important;
-  color: #fff !important;
-  border: none;
-  margin-bottom: 6px;
-  border-radius: 12px;
-  padding: 12px 16px;
-  transition:
-    background 0.25s ease,
-    transform 0.25s ease;
-  backdrop-filter: blur(12px);
-}
-
-.list-group-item:hover {
-  background: rgba(75, 108, 183, 0.6) !important;
-  transform: translateX(3px);
-}
-
-.table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: rgba(24, 40, 72, 0.4);
-  color: #fff;
-  border-radius: 15px;
-  overflow: hidden;
-}
-
-.table tbody,
-.table tbody tr,
-.table tbody tr td {
-  background: transparent !important;
-}
-
-.table th,
-.table td {
-  padding: 10px 12px;
-  vertical-align: middle;
-}
-
-.table th {
-  background: rgba(75, 108, 183, 0.6);
-  color: #fff;
-  font-weight: 600;
-  border-bottom: 1px solid rgba(75, 108, 183, 0.7);
-}
-
-.table td {
-  color: rgba(255, 255, 255, 0.85);
-  border-bottom: 1px solid rgba(75, 108, 183, 0.3);
-}
-
-.table-striped tbody tr:nth-of-type(odd) {
-  background-color: rgba(24, 40, 72, 0.3) !important;
-}
-
-.table-responsive {
-  border-radius: 15px;
-  overflow: hidden;
-}
-
-.btn-sm {
-  font-size: 0.8rem;
-  padding: 4px 10px;
-  border-radius: 10px;
-  transition: 0.25s ease;
-}
-
-.btn-success {
-  background: #4caf50;
-  border: none;
-}
-.btn-danger {
-  background: #e57373;
-  border: none;
-}
-.btn-success:hover {
-  background: #3e8e41;
-}
-.btn-danger:hover {
-  background: #c94f4f;
-}
-
-/* Badges inside leave balances */
 .badge {
-  border-radius: 10px;
-  padding: 4px 10px;
-  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
-/* Success / Warning / Info badge colors */
-.badge.bg-success {
-  background-color: #4caf50 !important;
+.progress {
+  background-color: #e9ecef;
+  border-radius: 4px;
 }
-.badge.bg-warning {
-  background-color: #ffb74d !important;
+
+/* Badge colors */
+.bg-primary {
+  background-color: #0d6efd !important;
+}
+
+.bg-success {
+  background-color: #198754 !important;
+}
+
+.bg-info {
+  background-color: #0dcaf0 !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
   color: #000 !important;
 }
-.badge.bg-info {
-  background-color: #00bcd4 !important;
+
+.bg-danger {
+  background-color: #dc3545 !important;
 }
 
-/* Buttons outside tables */
-.btn {
-  border-radius: 12px;
-  transition: 0.25s ease;
+.bg-secondary {
+  background-color: #6c757d !important;
 }
 
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+.bg-light {
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
 }
 
-.btn-primary {
-  background: #6c63ff;
-  border: none;
-}
-.btn-primary:hover {
-  background: #5548c8;
-}
-.btn-info {
-  background: #00bcd4;
-  border: none;
-}
-.btn-dark {
-  background: #333;
-  border: none;
-}
-.btn-outline-danger {
-  border-color: #e57373;
-  color: #e57373;
-}
-.btn-outline-danger:hover {
-  background: #e57373;
-  color: #fff;
+/* Icon background colors */
+.bg-primary.bg-opacity-10 {
+  background-color: rgba(13, 110, 253, 0.1) !important;
 }
 
-/* Scrollbar styling */
-.list-group::-webkit-scrollbar {
-  width: 8px;
+.bg-success.bg-opacity-10 {
+  background-color: rgba(25, 135, 84, 0.1) !important;
 }
 
-.list-group::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
+.bg-info.bg-opacity-10 {
+  background-color: rgba(13, 202, 240, 0.1) !important;
 }
 
-.list-group::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+.bg-warning.bg-opacity-10 {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+/* Alert styles */
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c2c7;
+  color: #842029;
+}
+
+/* List group custom */
+.list-group-item {
+  background: transparent;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .row > .col-lg-5,
-  .row > .col-lg-7 {
-    flex: 0 0 100%;
-    max-width: 100%;
+  .timeoff {
+    padding: 15px;
   }
-
+  
+  .card-body {
+    padding: 1rem !important;
+  }
+  
   .table th,
   .table td {
-    padding: 8px;
+    padding: 0.5rem;
   }
+}
+
+/* Scrollbar styling */
+.card-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.card-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.card-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 </style>

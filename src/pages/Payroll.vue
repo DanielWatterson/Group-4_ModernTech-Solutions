@@ -1,124 +1,364 @@
 <template>
-  <div class="container py-4">
-    <h2>Payroll Processing Dashboard</h2>
-    <p class="lead">
-      This interface demonstrates the automation of payroll calculations by centralizing employee
-      and payroll data. This fulfills the requirement for **automated payroll calculations** and
-      **digital payslip generation**.
-    </p>
-
-    <div v-if="loading" class="text-center my-5">
-      <div class="spinner-border text-light" role="status">
-        <span class="visually-hidden">Loading...</span>
+  <div class="payroll">
+    <div class="container-fluid">
+      <!-- Header -->
+      <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+          <h1 class="h2 fw-bold mb-2">Payroll Management</h1>
+          <p class="text-muted mb-0">Automated payroll calculations and digital payslip generation</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <div class="d-flex align-items-center justify-content-md-end gap-3">
+            <span class="badge bg-success">
+              <i class="bi bi-cash-coin me-1"></i> Live Database
+            </span>
+            <button @click="fetchPayrollData" class="btn btn-outline-primary btn-sm" :disabled="loading">
+              <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+          </div>
+        </div>
       </div>
-      <p class="mt-2 text-white">Fetching Payroll Records from Database...</p>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 text-muted">Fetching payroll data from database...</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="alert alert-danger alert-dismissible fade show">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle me-3 fs-4 flex-shrink-0"></i>
+          <div class="flex-grow-1">
+            <h5 class="alert-heading mb-2">Connection Error</h5>
+            <p class="mb-3">{{ error }}</p>
+            <div>
+              <button @click="fetchPayrollData" class="btn btn-primary btn-sm">Retry Connection</button>
+            </div>
+          </div>
+          <button type="button" class="btn-close" @click="error = null"></button>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div v-else>
+        <!-- Quick Actions -->
+        <div class="row g-3 mb-4">
+          <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
+                    <i class="bi bi-calculator text-primary fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="text-muted mb-0 small">Processed Payroll</h6>
+                    <h3 class="fw-bold mb-0 text-primary">{{ processedCount }}</h3>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">Completed calculations</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle bg-success bg-opacity-10 p-2 me-3">
+                    <i class="bi bi-cash-stack text-success fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="text-muted mb-0 small">Total Payroll</h6>
+                    <h3 class="fw-bold mb-0 text-success">R{{ totalPayroll.toLocaleString('en-ZA') }}</h3>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">Monthly payout</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle bg-info bg-opacity-10 p-2 me-3">
+                    <i class="bi bi-people text-info fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="text-muted mb-0 small">Pending</h6>
+                    <h3 class="fw-bold mb-0 text-info">{{ pendingCount }}</h3>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">Awaiting processing</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle bg-warning bg-opacity-10 p-2 me-3">
+                    <i class="bi bi-clock-history text-warning fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="text-muted mb-0 small">Avg Tax</h6>
+                    <h3 class="fw-bold mb-0 text-warning">{{ avgTax }}%</h3>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">Average deduction</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0">
+              <i class="bi bi-lightning text-primary me-2"></i>Payroll Actions
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex gap-3">
+              <button 
+                class="btn btn-primary d-flex align-items-center gap-2" 
+                @click="runPayrollSimulation" 
+                :disabled="allCalculated"
+              >
+                <i class="bi bi-calculator-fill"></i>
+                {{ allCalculated ? 'Payroll Fully Processed' : 'Run Payroll Simulation' }}
+              </button>
+              <button 
+                class="btn btn-outline-secondary d-flex align-items-center gap-2" 
+                @click="resetPayroll"
+              >
+                <i class="bi bi-arrow-clockwise"></i> Reset Payroll Data
+              </button>
+              <button 
+                class="btn btn-outline-success d-flex align-items-center gap-2 ms-auto" 
+                @click="exportToExcel"
+              >
+                <i class="bi bi-file-earmark-excel"></i> Export to Excel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payroll Table -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-table text-primary me-2"></i>Employee Payroll Data
+            </h5>
+            <div class="d-flex gap-2">
+              <input 
+                type="text" 
+                v-model="searchQuery" 
+                class="form-control form-control-sm" 
+                placeholder="Search employees..." 
+                style="width: 200px;"
+              />
+              <select v-model="selectedDepartment" class="form-select form-select-sm" style="width: auto;">
+                <option value="">All Departments</option>
+                <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Monthly Salary</th>
+                    <th>Hours Worked</th>
+                    <th>Leave Days</th>
+                    <th class="text-end">Net Pay</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="employee in filteredEmployees" :key="employee.employeeId">
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" 
+                             style="width: 40px; height: 40px;">
+                          {{ getInitials(employee.name) }}
+                        </div>
+                        <div>
+                          <div class="fw-bold">{{ employee.name }}</div>
+                          <small class="text-muted">ID: {{ employee.employeeId }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" :class="getDepartmentClass(employee.department)">
+                        {{ employee.department }}
+                      </span>
+                    </td>
+                    <td>{{ employee.position }}</td>
+                    <td class="fw-bold">R{{ employee.salary.toLocaleString('en-ZA') }}</td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <span>{{ employee.hoursWorked }}</span>
+                        <div class="progress ms-2 flex-grow-1" style="height: 6px; width: 60px;">
+                          <div 
+                            class="progress-bar bg-success" 
+                            :style="{ width: Math.min((employee.hoursWorked / 160) * 100, 100) + '%' }"
+                          ></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span :class="employee.leaveDeductions > 2 ? 'text-danger fw-bold' : 'text-warning'">
+                        {{ employee.leaveDeductions }} days
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      <div :class="{ 'fw-bold text-success': employee.isCalculated }">
+                        {{
+                          employee.isCalculated
+                            ? `R${employee.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
+                            : '<span class="text-muted fst-italic">Pending</span>'
+                        }}
+                      </div>
+                      <small v-if="employee.isCalculated" class="text-muted d-block">
+                        Tax: R{{ employee.taxes.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
+                      </small>
+                    </td>
+                    <td>
+                      <button
+                        class="btn btn-sm btn-outline-primary"
+                        :disabled="!employee.isCalculated"
+                        @click="viewPayslip(employee)"
+                      >
+                        <i class="bi bi-file-earmark-text me-1"></i>Payslip
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <!-- No Results -->
+              <div v-if="filteredEmployees.length === 0" class="text-center py-5">
+                <i class="bi bi-cash fs-1 text-muted mb-3"></i>
+                <h5 class="text-muted mb-2">No payroll data found</h5>
+                <p class="text-muted mb-0">Try adjusting your search criteria or run payroll simulation</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Footer -->
+        <div class="mt-4 pt-3 border-top">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="text-muted small">
+              <i class="bi bi-database me-1"></i> Connected to MySQL database | 
+              Showing {{ filteredEmployees.length }} of {{ employeesWithPayData.length }} records
+            </div>
+            <button @click="fetchPayrollData" class="btn btn-link text-decoration-none">
+              <i class="bi bi-arrow-clockwise me-1"></i>Refresh Data
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div v-else-if="error" class="alert alert-danger d-flex align-items-center" role="alert">
-      <i class="bi bi-exclamation-triangle-fill me-2"></i>
-      <div>
-        <strong>Error:</strong> {{ error }}
-        <button class="btn btn-sm btn-outline-danger ms-3" @click="fetchPayrollData">Retry</button>
-      </div>
-    </div>
-
-    <div v-else>
-      <div class="top-buttons">
-        <button class="btn btn-success" @click="runPayrollSimulation" :disabled="allCalculated">
-          <i class="bi bi-calculator-fill me-1"></i>
-          {{ allCalculated ? 'Payroll Fully Processed' : 'Run Payroll Simulation' }}
-        </button>
-        <button class="btn btn-outline-light" @click="resetPayroll">
-          <i class="bi bi-arrow-clockwise me-1"></i> Reset All Payroll Data
-        </button>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
-          <thead class="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>Employee Name</th>
-              <th>Position</th>
-              <th>Monthly Salary</th>
-              <th>Hours Worked</th>
-              <th>Leave Days</th>
-              <th class="text-end">Net Pay (Calculated)</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="employee in employeesWithPayData" :key="employee.employeeId">
-              <td>{{ employee.employeeId }}</td>
-              <td>{{ employee.name }}</td>
-              <td>{{ employee.position }}</td>
-              <td>R{{ employee.salary.toLocaleString('en-ZA') }}</td>
-              <td>{{ employee.hoursWorked }}</td>
-              <td>{{ employee.leaveDeductions }}</td>
-              <td class="text-end">
-                <span :class="{ 'fw-bold text-success': employee.isCalculated }">
-                  {{
-                    employee.isCalculated
-                      ? `R${employee.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
-                      : '—'
-                  }}
-                </span>
-              </td>
-              <td>
-                <button
-                  class="btn btn-sm"
-                  :class="employee.isCalculated ? 'btn-info text-white' : 'btn-outline-secondary text-white'"
-                  :disabled="!employee.isCalculated"
-                  @click="viewPayslip(employee)"
-                >
-                  <i class="bi bi-file-earmark-text"></i> View Payslip
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div v-if="showPayslipModal" class="modal-backdrop d-flex align-items-center justify-content-center">
-      <div class="modal d-block" tabindex="-1">
+    <!-- Payslip Modal -->
+    <div v-if="showPayslipModal" class="modal-backdrop fade show d-flex align-items-center justify-content-center">
+      <div class="modal fade show d-block" tabindex="-1">
         <div class="modal-dialog modal-lg">
-          <div class="modal-content text-dark bg-white">
+          <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary text-white">
               <h5 class="modal-title">Digital Payslip: {{ selectedPayslip.name }}</h5>
               <button type="button" class="btn-close btn-close-white" @click="showPayslipModal = false"></button>
             </div>
             <div class="modal-body" v-if="selectedPayslip">
               <div class="row mb-4">
-                <div class="col-6">
-                  <p><strong>Employee ID:</strong> #{{ selectedPayslip.employeeId }}</p>
-                  <p><strong>Position:</strong> {{ selectedPayslip.position }}</p>
+                <div class="col-md-6">
+                  <div class="card border-0 bg-light">
+                    <div class="card-body">
+                      <h6 class="text-muted mb-3">Employee Details</h6>
+                      <p class="mb-2">
+                        <strong>Employee ID:</strong> #{{ selectedPayslip.employeeId }}
+                      </p>
+                      <p class="mb-2">
+                        <strong>Position:</strong> {{ selectedPayslip.position }}
+                      </p>
+                      <p class="mb-2">
+                        <strong>Department:</strong> 
+                        <span class="badge" :class="getDepartmentClass(selectedPayslip.department)">
+                          {{ selectedPayslip.department }}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div class="col-6 text-end">
-                  <p><strong>Base Salary:</strong> R{{ selectedPayslip.salary.toLocaleString('en-ZA') }}</p>
-                  <p><strong>Calculated Gross:</strong> R{{ selectedPayslip.grossPayAfterLeave.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}</p>
+                <div class="col-md-6">
+                  <div class="card border-0 bg-light">
+                    <div class="card-body">
+                      <h6 class="text-muted mb-3">Salary Details</h6>
+                      <p class="mb-2">
+                        <strong>Base Salary:</strong> R{{ selectedPayslip.salary.toLocaleString('en-ZA') }}
+                      </p>
+                      <p class="mb-2">
+                        <strong>Gross Pay:</strong> R{{ selectedPayslip.grossPayAfterLeave.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
+                      </p>
+                      <p class="mb-0">
+                        <strong>Hours Worked:</strong> {{ selectedPayslip.hoursWorked }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <hr />
-              <h6>Deductions:</h6>
-              <ul class="list-group list-group-flush mb-4">
-                <li class="list-group-item d-flex justify-content-between">
-                  Income Tax ({{ (taxRate * 100).toFixed(0) }}%)
-                  <span class="text-danger">-R{{ selectedPayslip.taxes.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
-                  Leave Deductions ({{ selectedPayslip.leaveDeductions }} days)
-                  <span class="text-danger">-R{{ selectedPayslip.leaveCost.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}</span>
-                </li>
-              </ul>
-              <div class="bg-light p-3 rounded">
-                <h4 class="text-success text-center mb-0">
-                  NET TAKE-HOME PAY: R{{ selectedPayslip.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
-                </h4>
+
+              <div class="card border-0 bg-light mb-4">
+                <div class="card-body">
+                  <h6 class="text-muted mb-3">Deductions Breakdown</h6>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Income Tax ({{ (taxRate * 100).toFixed(0) }}%)</span>
+                        <span class="text-danger fw-bold">
+                          -R{{ selectedPayslip.taxes.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
+                        </span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-3">
+                        <span>Leave Deductions ({{ selectedPayslip.leaveDeductions }} days)</span>
+                        <span class="text-danger fw-bold">
+                          -R{{ selectedPayslip.leaveCost.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="bg-white p-3 rounded text-center">
+                        <small class="text-muted d-block">NET TAKE-HOME PAY</small>
+                        <h3 class="text-success fw-bold mb-0">
+                          R{{ selectedPayslip.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                This payslip has been digitally generated and requires no physical signature.
               </div>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-outline-primary" @click="window.print()"><i class="bi bi-printer"></i> Print</button>
+              <button class="btn btn-outline-primary d-flex align-items-center gap-2" @click="printPayslip">
+                <i class="bi bi-printer"></i> Print
+              </button>
               <button type="button" class="btn btn-secondary" @click="showPayslipModal = false">Close</button>
             </div>
           </div>
@@ -139,13 +379,46 @@ export default {
       showPayslipModal: false,
       selectedPayslip: null,
       taxRate: 0.25,
-      apiBase: 'http://localhost:5000/api/payroll'
+      apiBase: 'http://localhost:5000/api/payroll',
+      searchQuery: '',
+      selectedDepartment: '',
     }
   },
   computed: {
     allCalculated() {
       return this.employeesWithPayData.length > 0 &&
-            this.employeesWithPayData.every((emp) => emp.isCalculated)
+             this.employeesWithPayData.every(emp => emp.isCalculated)
+    },
+    processedCount() {
+      return this.employeesWithPayData.filter(emp => emp.isCalculated).length
+    },
+    pendingCount() {
+      return this.employeesWithPayData.filter(emp => !emp.isCalculated).length
+    },
+    totalPayroll() {
+      return this.employeesWithPayData.reduce((sum, emp) => sum + (emp.netPay || 0), 0)
+    },
+    avgTax() {
+      const calculated = this.employeesWithPayData.filter(emp => emp.isCalculated)
+      if (calculated.length === 0) return 0
+      const avg = calculated.reduce((sum, emp) => {
+        const taxPercent = (emp.taxes / emp.salary) * 100
+        return sum + taxPercent
+      }, 0) / calculated.length
+      return avg.toFixed(1)
+    },
+    departments() {
+      const depts = [...new Set(this.employeesWithPayData.map(emp => emp.department))]
+      return depts.filter(Boolean).sort()
+    },
+    filteredEmployees() {
+      return this.employeesWithPayData.filter(emp => {
+        const matchesSearch = this.searchQuery === '' || 
+          emp.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+        const matchesDept = this.selectedDepartment === '' || 
+          emp.department === this.selectedDepartment
+        return matchesSearch && matchesDept
+      })
     }
   },
   async mounted() {
@@ -164,6 +437,7 @@ export default {
           employeeId: emp.employee_id,
           name: emp.name,
           position: emp.position,
+          department: emp.department || 'Unknown',
           salary: parseFloat(emp.salary) || 0,
           hoursWorked: emp.hours_worked || 160,
           leaveDeductions: emp.leave_deductions || 0,
@@ -199,179 +473,204 @@ export default {
       this.selectedPayslip = employee;
       this.showPayslipModal = true;
     },
-  async resetPayroll() {
-  if (!confirm("Are you sure you want to delete ALL processed payroll data? This cannot be undone.")) {
-    return;
-  }
 
-  try {
-    const response = await fetch(`${this.apiBase}/reset`, {
-      method: 'POST'
-    });
+    printPayslip() {
+      window.print();
+    },
 
-    if (response.ok) {
-      await this.fetchPayrollData(); // This refreshes the table to show '—'
-      alert("Payroll data reset successfully. You can now run the simulation again.");
-    } else {
-      throw new Error('Failed to reset payroll data.');
+    async resetPayroll() {
+      if (!confirm("Are you sure you want to delete ALL processed payroll data? This cannot be undone.")) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${this.apiBase}/reset`, {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          await this.fetchPayrollData();
+          alert("Payroll data reset successfully. You can now run the simulation again.");
+        } else {
+          throw new Error('Failed to reset payroll data.');
+        }
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    },
+
+    exportToExcel() {
+      alert('Excel export feature coming soon!');
+    },
+
+    getInitials(name) {
+      if (!name) return '??';
+      return name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    },
+
+    getDepartmentClass(department) {
+      const classes = {
+        'Development': 'bg-primary',
+        'Marketing': 'bg-success',
+        'IT': 'bg-info',
+        'Design': 'bg-warning',
+        'Finance': 'bg-danger',
+        'Support': 'bg-secondary',
+        'Sales': 'bg-dark',
+        'QA': 'bg-primary',
+        'HR': 'bg-success'
+      };
+      return classes[department] || 'bg-light text-dark';
     }
-  } catch (err) {
-    alert("Error: " + err.message);
   }
 }
-}
-}
-
 </script>
 
 <style scoped>
-.container {
-  font-family: 'Inter', sans-serif;
-  min-height: 100vh;
-  padding-top: 60px;
-  padding-bottom: 60px;
-  background:
-    linear-gradient(rgba(24, 40, 72, 0.6), rgba(75, 108, 183, 0.6)),
-    url('https://images.unsplash.com/photo-1606778303077-3780ea8d5420?q=80&w=1170&auto=format&fit=crop')
-      center/cover no-repeat;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  animation: fadeIn 0.8s ease-out;
+.payroll {
+  background: #f8f9fa;
+  min-height: calc(100vh - 56px);
+  padding: 20px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.card {
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-h2 {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-p.lead {
-  color: rgba(255, 255, 255, 0.85);
-  margin-bottom: 1.5rem;
-}
-
-.top-buttons {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.top-buttons .btn {
-  font-size: 0.85rem;
-  padding: 6px 14px;
-  border-radius: 12px;
-  min-width: auto;
-  transition: 0.25s ease;
-}
-
-.top-buttons .btn:hover {
+.card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-.table-responsive {
-  backdrop-filter: blur(15px);
-  background: rgba(24, 40, 72, 0.5);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-  padding: 10px;
-}
-
-.table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: transparent !important;
-  color: #fff;
-}
-
-.table th,
-.table td {
-  vertical-align: middle;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  transition: background 0.25s ease;
-}
-
-.table th {
-  background: rgba(75, 108, 183, 0.6) !important;
-  font-weight: 600;
-}
-
-.table-striped tbody tr:nth-of-type(odd) {
-  background-color: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
 .table-hover tbody tr:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  transform: translateX(2px);
-  transition: 0.25s ease;
+  background-color: rgba(13, 110, 253, 0.05);
 }
 
-/* ---------------- Modal styling ---------------- */
-.modal-dialog {
-  margin: 80px auto;
+.badge {
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
+
+.progress {
+  background-color: #e9ecef;
+  border-radius: 4px;
+}
+
+.progress-bar {
+  border-radius: 4px;
+}
+
+/* Badge colors */
+.bg-primary {
+  background-color: #0d6efd !important;
+}
+
+.bg-success {
+  background-color: #198754 !important;
+}
+
+.bg-info {
+  background-color: #0dcaf0 !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+.bg-dark {
+  background-color: #212529 !important;
+}
+
+/* Icon background colors */
+.bg-primary.bg-opacity-10 {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+.bg-success.bg-opacity-10 {
+  background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.bg-info.bg-opacity-10 {
+  background-color: rgba(13, 202, 240, 0.1) !important;
+}
+
+.bg-warning.bg-opacity-10 {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+/* Text colors */
+.text-primary {
+  color: #0d6efd !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+.text-info {
+  color: #0dcaf0 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+/* Modal backdrop */
 .modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1040;
-  width: 100vw;
-  height: 100vh;
   background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
 }
 
 .modal-content {
-  border-radius: 20px;
-  backdrop-filter: blur(15px);
-  background: rgba(24, 40, 72, 0.5);
-  color: #fff;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
 }
 
-.modal-header,
-.modal-footer {
-  border: none;
+.modal-header {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
-/* Deduction list in modal */
-ul.list-unstyled li {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.3rem 0;
+/* Alert styles */
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c2c7;
+  color: #842029;
 }
 
-/* Text highlights */
-.fw-bold.text-success {
-  color: #28a745 !important;
+.alert-info {
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
 }
 
-/* Responsive adjustments  */
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .table th,
-  .table td {
-    font-size: 0.85rem;
-    padding: 0.45rem 0.6rem;
+  .payroll {
+    padding: 15px;
   }
-
-  .btn {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.6rem;
+  
+  .card-body {
+    padding: 1rem !important;
+  }
+  
+  .modal-dialog {
+    margin: 1rem;
   }
 }
 </style>

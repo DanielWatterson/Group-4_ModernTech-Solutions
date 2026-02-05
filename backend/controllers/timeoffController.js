@@ -5,16 +5,13 @@ exports.getTimeOffData = async (req, res) => {
     try {
         const requests = await TimeOff.getAllRequests();
         const balances = await TimeOff.getBalances();
-        const attendance = await TimeOff.getAttendance(); // New
+        const attendance = await TimeOff.getAttendance();
+        
         res.json({
             success: true,
             requests,
             balances,
-            attendance // Now sent to frontend
-        res.json({
-            success: true,
-            requests,
-            balances
+            attendance
         });
     } catch (error) {
         console.error('TimeOff Controller Error:', error);
@@ -79,20 +76,33 @@ exports.submitRequest = async (req, res) => {
         });
     }
 };
+
 exports.deleteRequest = async (req, res) => {
     try {
         await TimeOff.deleteRequest(req.params.id);
-        res.json({ success: true, message: 'Record deleted' });
+        res.json({ 
+            success: true, 
+            message: 'Record deleted' 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 };
 
 exports.clearPending = async (req, res) => {
     try {
         await TimeOff.clearPendingRequests();
-        res.json({ success: true, message: 'All pending requests cleared' });
+        res.json({ 
+            success: true, 
+            message: 'All pending requests cleared' 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 };

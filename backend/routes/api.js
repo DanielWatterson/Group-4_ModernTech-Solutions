@@ -2,11 +2,14 @@
 const express = require('express');
 const router = express.Router();
 
-// Controllers
+// Controllers (removed authController)
 const dashboardController = require('../controllers/dashboardController');
 const employeeController = require('../controllers/employeeController');
 const payrollController = require('../controllers/payrollController');
 const timeoffController = require('../controllers/timeoffController');
+const authController = require('../controllers/authController');
+
+router.post('/login', authController.login);
 
 // ========== TEST ROUTES ==========
 router.get('/test', (req, res) => {
@@ -87,5 +90,9 @@ router.get('/performance', async (req, res) => {
         });
     }
 });
+
+module.exports = router;
+// ========== AUTH ROUTES ==========
+router.post('/login', authController.login);
 
 module.exports = router;

@@ -137,7 +137,7 @@
                             </div>
                             <div>
                               <div class="fw-bold">{{ employee.name }}</div>
-                              <small class="text-muted">{{ employee.email }}</small>
+                              <small class="text-muted">{{ employee.email || employee.contact }}</small>
                             </div>
                           </div>
                         </td>
@@ -199,6 +199,7 @@ export default {
       error: null,
       currentDate: '',
       
+      // Get user data from localStorage
       userName: localStorage.getItem('userName') || 'Guest',
       userRole: localStorage.getItem('userRole') || '',
       userDepartment: localStorage.getItem('userDepartment') || '',
@@ -261,6 +262,7 @@ export default {
   },
   
   async mounted() {
+    // Set current date
     const now = new Date()
     this.currentDate = now.toLocaleDateString('en-US', { 
       weekday: 'long', 
@@ -269,10 +271,22 @@ export default {
       day: 'numeric' 
     })
     
+    // Load user data from localStorage on mount
+    this.updateUserData()
+    
+    // Fetch dashboard data
     await this.fetchData()
   },
   
   methods: {
+    updateUserData() {
+      this.userName = localStorage.getItem('userName') || 'Guest'
+      this.userRole = localStorage.getItem('userRole') || ''
+      this.userDepartment = localStorage.getItem('userDepartment') || ''
+      this.userEmail = localStorage.getItem('userEmail') || ''
+      this.userAvatar = localStorage.getItem('userAvatar') || 'https://ui-avatars.com/api/?name=Guest&background=6c757d&color=fff'
+    },
+    
     async fetchData() {
       this.loading = true
       this.error = null
@@ -289,32 +303,68 @@ export default {
           const departments = [...new Set(response.data.map(emp => emp.department))]
           this.stats[1].value = departments.length
           
+          // Calculate recent joiners (last 30 days)
           const thirtyDaysAgo = new Date()
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
           const recentJoiners = response.data.filter(emp => {
-            const joinDate = new Date(emp.recruitment_date || emp.join_date || emp.created_at)
+            if (!emp.recruitment_date) return false
+            const joinDate = new Date(emp.recruitment_date)
             return joinDate > thirtyDaysAgo
           })
           this.stats[2].value = recentJoiners.length
+          
+        } else if (Array.isArray(response)) {
+          // Handle case where API returns array directly
+          this.recentEmployees = response.slice(-5).reverse()
+          this.stats[0].value = response.length
+          
+          const departments = [...new Set(response.map(emp => emp.department))]
+          this.stats[1].value = departments.length
+          
+          this.stats[2].value = 0 // Can't calculate without dates
+        } else {
+          throw new Error('Unexpected API response format')
         }
       } catch (error) {
         console.error('Failed to fetch data:', error)
         this.error = 'Unable to load data from database. Please check your connection.'
+        
+        // Fallback to JSON data if API fails
+        await this.loadFallbackData()
       } finally {
         this.loading = false
+      }
+    },
+    
+    async loadFallbackData() {
+      try {
+        // Fallback to your JSON data
+        const response = await import('@/data/employee_info.json')
+        const employees = response.employeeInformation || []
+        
+        this.recentEmployees = employees.slice(-5).reverse()
+        this.stats[0].value = employees.length
+        
+        const departments = [...new Set(employees.map(emp => emp.department))]
+        this.stats[1].value = departments.length
+        this.stats[2].value = 3 // Default value for demo
+      } catch (err) {
+        console.error('Fallback data also failed:', err)
       }
     },
     
     handleStatClick(stat) {
       if (stat.title.includes('Employee')) {
         this.$router.push('/employees')
+      } else if (stat.title.includes('Department')) {
+        this.$router.push('/dashboard')
       }
     },
     
     handleQuickAction(action) {
       switch(action) {
         case 'addEmployee':
-          this.$router.push('/employees/add')
+          this.$router.push('/employees')
           break
         case 'timeOff':
           this.$router.push('/timeoff')
@@ -323,18 +373,19 @@ export default {
           this.$router.push('/payroll')
           break
         case 'reports':
-          this.$router.push('/reports')
+          this.$router.push('/dashboard')
           break
         case 'documents':
-          this.$router.push('/documents')
+          alert('Documents feature coming soon!')
           break
         case 'settings':
-          this.$router.push('/settings')
+          alert('Settings feature coming soon!')
           break
       }
     },
     
     getInitials(name) {
+      if (!name) return '??'
       return name
         .split(' ')
         .map(word => word[0])
@@ -360,16 +411,21 @@ export default {
     
     formatDate(dateString) {
       if (!dateString) return 'N/A'
-      const date = new Date(dateString)
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      })
+      try {
+        const date = new Date(dateString)
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        })
+      } catch (e) {
+        return dateString
+      }
     },
     
     updateTask(task) {
       console.log('Task updated:', task)
+      // In a real app, you would send this to an API
     }
   }
 }
@@ -403,10 +459,87 @@ export default {
 .badge {
   font-weight: 500;
   padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .form-check-input:checked {
   background-color: #0d6efd;
   border-color: #0d6efd;
+}
+
+/* Badge colors */
+.bg-primary {
+  background-color: #0d6efd !important;
+}
+
+.bg-success {
+  background-color: #198754 !important;
+}
+
+.bg-info {
+  background-color: #0dcaf0 !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+.bg-dark {
+  background-color: #212529 !important;
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
+}
+
+/* Icon background colors */
+.bg-primary.bg-opacity-10 {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+.bg-success.bg-opacity-10 {
+  background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.bg-info.bg-opacity-10 {
+  background-color: rgba(13, 202, 240, 0.1) !important;
+}
+
+.bg-warning.bg-opacity-10 {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+/* Text colors */
+.text-primary {
+  color: #0d6efd !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+.text-info {
+  color: #0dcaf0 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+/* Alert styles */
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c2c7;
+  color: #842029;
 }
 </style>

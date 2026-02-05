@@ -11,6 +11,10 @@ exports.getTimeOffData = async (req, res) => {
             requests,
             balances,
             attendance // Now sent to frontend
+        res.json({
+            success: true,
+            requests,
+            balances
         });
     } catch (error) {
         console.error('TimeOff Controller Error:', error);

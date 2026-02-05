@@ -1,12 +1,13 @@
-// backend/routes/api.js
 const express = require('express');
 const router = express.Router();
 
 // Controllers
-const dashboardController = require('../controllers/dashboardController');
-const employeeController = require('../controllers/employeeController');
-const payrollController = require('../controllers/payrollController');
-const timeoffController = require('../controllers/timeoffController');
+const dashboardController = require('../controllers/dashboardController.js');
+const employeeController = require('../controllers/employeeController.js');
+const { login } = require('../controllers/authController.js');
+const payrollController = require('../controllers/payrollController.js');
+const performanceController = require('../controllers/performanceController.js');
+const timeoffController = require('../controllers/timeoffController.js');
 
 // ========== TEST ROUTES ==========
 router.get('/test', (req, res) => {
@@ -47,39 +48,10 @@ router.get('/dashboard/kpis', dashboardController.getKPIs);
 // ========== EMPLOYEE ROUTES ==========
 router.get('/employees', employeeController.getAllEmployees);
 router.get('/employees/:id', employeeController.getEmployeeById);
-
-// ========== PAYROLL ROUTES ==========
-router.get('/payroll', payrollController.getPayrollData);
-router.post('/payroll/calculate', payrollController.calculateAll);
-
-// ========== TIME OFF ROUTES ==========
-router.get('/timeoff', timeoffController.getTimeOffData);
-router.get('/timeoff/balances', timeoffController.getLeaveBalances);
-
-// ========== PERFORMANCE ROUTES ==========
-router.get('/performance', async (req, res) => {
-    try {
-        const db = require('../config/database');
-        const [rows] = await db.query(`
-            SELECT pr.*, e.name as employee_name, e.department 
-            FROM performance_reviews pr
-            JOIN employees e ON pr.employee_id = e.employee_id
-            ORDER BY pr.review_date DESC
-        `);
-        
-        res.json({
-            success: true,
-            count: rows.length,
-            data: rows
-        });
-    } catch (error) {
-        console.error('Performance route error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch performance data',
-            message: error.message
-        });
-    }
-});
+// ========== PERFOMANCE  ROUTES ==========
+router.get('/perfomances', performanceController.getAllPerformance);
+router.get('/perfomances/:id', performanceController.getPerformanceById);
+router.post('/perfomances', performanceController.createPerformance);
+router.patch('/perfomances/:id', performanceController.updatePerformance);
 
 module.exports = router;

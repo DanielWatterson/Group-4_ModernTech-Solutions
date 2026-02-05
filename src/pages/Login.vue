@@ -25,17 +25,22 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import usersData from '../data/user.json'
+import axios from 'axios'
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const error = ref('')
 
-function login() {
-  const user = usersData.find((u) => u.email === email.value && u.password === password.value)
+async function login() {
+  try {
+    const response = await axios.post('http://localhost:5000/api/login', {
+      email: email.value,
+      password: password.value,
+    })
 
-  if (user) {
+    const user = response.data
+
     localStorage.setItem('loggedIn', 'true')
     localStorage.setItem('userName', user.name)
     localStorage.setItem('userRole', user.role)
@@ -45,11 +50,16 @@ function login() {
 
     window.dispatchEvent(new Event('userChanged'))
     router.push('/home')
-  } else {
-    error.value = 'Invalid email or password.'
+  } catch (err) {
+    if (err.response && err.response.status === 401) {
+      error.value = 'Invalid email or password.'
+    } else {
+      error.value = 'Server error. Please try again later.'
+    }
   }
 }
 </script>
+
 
 <style scoped>
 /* ------------------------- */

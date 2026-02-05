@@ -1,32 +1,59 @@
-// backend/controllers/authController.js
-const User = require('../models/User.js');
+const db = require('../config/database');
 
-const login = async (req, res) => {
+exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' });
+    return res.status(400).json({ 
+      success: false,
+      message: 'Email and password are required' 
+    });
   }
 
   try {
-    const user = await User.findByEmailAndPassword(email, password);
+    // Direct database query to match your SQL structure
+    const [users] = await db.query(
+      `SELECT user_id, name, role, department, email, avatar, password_hash 
+       FROM users 
+       WHERE email = ? 
+       LIMIT 1`,
+      [email]
+    );
 
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    if (users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
     }
 
-    // Return only the needed data
+    const user = users[0];
+    
+    // Check password (plain text comparison as in your SQL)
+    if (user.password_hash !== password) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid password'
+      });
+    }
+
+    // Return user data (exclude password)
     res.json({
-      name: user.name,
-      role: user.role,
-      department: user.department,
-      email: user.email,
-      avatar: user.avatar,
+      success: true,
+      data: {
+        id: user.user_id,
+        name: user.name,
+        role: user.role,
+        department: user.department,
+        email: user.email,
+        avatar: user.avatar
+      }
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Database error'
+    });
   }
 };
-
-module.exports = { login };

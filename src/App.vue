@@ -1,3 +1,62 @@
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
+
+const showSidebar = ref(false)
+const isDesktop = ref(true)
+
+const isLoginPage = computed(() => route.path === '/' || route.path === '/login')
+
+// User data from localStorage
+const userName = ref('')
+const userRole = ref('')
+const userAvatar = ref('')
+
+function updateUserData() {
+  userName.value = localStorage.getItem('userName') || 'Guest'
+  userRole.value = localStorage.getItem('userRole') || ''
+  userAvatar.value = localStorage.getItem('userAvatar') || 'https://ui-avatars.com/api/?name=User&background=0d6efd&color=fff'
+}
+
+onMounted(() => {
+  handleResize()
+  window.addEventListener('resize', handleResize)
+  updateUserData()
+  
+  // Listen for storage changes (login/logout)
+  window.addEventListener('storage', updateUserData)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  window.removeEventListener('storage', updateUserData)
+})
+
+function handleResize() {
+  const breakpoint = 992
+  isDesktop.value = window.innerWidth >= breakpoint
+  showSidebar.value = false
+}
+
+function toggleSidebar() {
+  showSidebar.value = !showSidebar.value
+}
+
+function closeSidebarIfMobile() {
+  if (!isDesktop.value) {
+    showSidebar.value = false
+  }
+}
+
+function logout() {
+  localStorage.clear()
+  router.push('/login')
+}
+</script>
+
 <template>
   <div id="app">
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm border-bottom">
@@ -66,51 +125,8 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-
-const route = useRoute()
-const router = useRouter()
-
-const showSidebar = ref(false)
-const isDesktop = ref(true)
-
-const isLoginPage = computed(() => route.path === '/' || route.path === '/login')
-
-const userName = ref(localStorage.getItem('userName') || 'Admin User')
-const userRole = ref(localStorage.getItem('userRole') || 'HR Manager')
-const userAvatar = ref(localStorage.getItem('userAvatar') || 'https://ui-avatars.com/api/?name=Admin&background=0d6efd&color=fff')
-
-onMounted(() => {
-  handleResize()
-  window.addEventListener('resize', handleResize)
-})
-
-function handleResize() {
-  const breakpoint = 992
-  isDesktop.value = window.innerWidth >= breakpoint
-  // Sidebar starts closed on all devices
-  showSidebar.value = false
-}
-
-function toggleSidebar() {
-  showSidebar.value = !showSidebar.value
-}
-
-function closeSidebarIfMobile() {
-  if (!isDesktop.value) {
-    showSidebar.value = false
-  }
-}
-
-function logout() {
-  localStorage.clear()
-  router.push('/login')
-}
-</script>
-
 <style scoped>
+/* Your existing CSS styles remain the same */
 .main-wrapper {
   display: flex;
   min-height: calc(100vh - 56px);

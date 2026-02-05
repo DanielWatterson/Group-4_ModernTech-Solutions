@@ -1,13 +1,44 @@
 <template>
   <div class="container py-4">
-    <h2>Time Off Management Dashboard</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h4 mb-0">Time Off Management</h2>
+      <button
+        @click="fetchData"
+        class="btn btn-outline-secondary d-flex align-items-center"
+        :disabled="loading"
+      >
+        <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+        <i v-else class="bi bi-arrow-clockwise me-2"></i>
+        Refresh Data
+      </button>
+    </div>
     <p class="lead">Manage employee leave requests and balances in real-time.</p>
 
-    <div v-if="loading" class="text-center my-5">
-      <div class="spinner-border text-light" role="status">
-        <span class="visually-hidden">Loading...</span>
+    <div class="card border-primary mb-4 shadow-sm">
+      <div class="card-header bg-primary text-white fw-bold">Global Time-Off Entry</div>
+      <div class="card-body">
+        <div class="row align-items-end">
+          <div class="col-md-5">
+            <label class="form-label small fw-bold text-uppercase">Select Leave Type</label>
+            <select v-model="selectedBulkType" class="form-select">
+              <option value="Annual">Annual Leave</option>
+              <option value="Sick">Sick Leave</option>
+              <option value="Family">Family Leave</option>
+              <option value="Unpaid">Unpaid Leave</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <button @click="submitBulkLeave" class="btn btn-primary w-100" :disabled="loading">
+              <i class="bi bi-send-plus me-2"></i> Submit for All Employees
+            </button>
+          </div>
+        </div>
       </div>
-      <p class="mt-2">Fetching data from HR Database...</p>
+    </div>
+
+    <div v-if="loading && !timeOffRequests.length" class="text-center my-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2 text-muted">Synchronizing with HR Database...</p>
     </div>
 
     <div v-else-if="error" class="alert alert-danger">
@@ -17,9 +48,9 @@
 
     <div v-else class="row">
       <div class="col-lg-5 mb-4">
-        <div class="card bg-light">
+        <div class="card bg-light h-100">
           <div class="card-header fw-bold">Current Employee Leave Balances</div>
-          <ul class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto">
+          <ul class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto">
             <li class="list-group-item" v-for="balance in leaveBalances" :key="balance.employeeId">
               <span class="fw-bold">{{ balance.name }}</span>
               <div class="row small mt-1">
@@ -34,9 +65,9 @@
       </div>
 
       <div class="col-lg-7 mb-4">
-        <div class="card">
+        <div class="card h-100">
           <div class="card-header bg-warning fw-bold text-white">
-            Pending Time Off Requests ({{ pendingRequests.length }})
+            Pending Time Off Requests ({{ temporaryRequests.length }})
           </div>
           <div class="table-responsive">
             <table class="table table-sm mb-0 align-middle">
@@ -49,44 +80,50 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="request in pendingRequests" :key="request.id">
+                <tr v-for="request in temporaryRequests" :key="request.id">
                   <td>{{ request.name }}</td>
                   <td><span class="badge bg-primary">{{ request.typeOfLeave }}</span></td>
                   <td>{{ calculateDays(request.startDate, request.endDate) }}</td>
                   <td>
-                    <button class="btn btn-sm btn-success me-2" @click="updateRequestStatus(request.id, 'Approved')">Approve</button>
-                    <button class="btn btn-sm btn-danger" @click="updateRequestStatus(request.id, 'Denied')">Deny</button>
+                    <button class="btn btn-sm btn-success me-2" @click="approveRequest(request)">Approve</button>
+                    <button class="btn btn-sm btn-danger" @click="discardRequest(request.id)">Deny</button>
                   </td>
+                </tr>
+                <tr v-if="!temporaryRequests.length">
+                  <td colspan="4" class="p-4 text-muted text-center italic">No pending requests found. (Refresh to clear)</td>
                 </tr>
               </tbody>
             </table>
-            <p v-if="!pendingRequests.length" class="p-3 text-muted text-center">No pending requests.</p>
           </div>
         </div>
       </div>
 
       <div class="col-12 mt-4">
-        <div class="card">
+        <div class="card shadow-sm">
           <div class="card-header bg-success fw-bold text-white">Leave Status History</div>
           <div class="table-responsive">
-            <table class="table table-sm mb-0 align-middle">
+            <table class="table table-sm mb-0 align-middle table-hover">
               <thead>
                 <tr>
                   <th>Employee</th>
                   <th>Leave Type</th>
                   <th>Dates</th>
                   <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="req in processedRequests" :key="req.id">
                   <td>{{ req.name }}</td>
-                  <td><span class="badge bg-primary">{{ req.typeOfLeave }}</span></td>
+                  <td>{{ req.typeOfLeave }}</td>
                   <td>{{ req.startDate }} → {{ req.endDate }}</td>
                   <td>
-                    <span :class="req.status === 'Approved' ? 'badge bg-success' : 'badge bg-danger'">
-                      {{ req.status }}
-                    </span>
+                    <span :class="req.status === 'Approved' ? 'badge bg-success' : 'badge bg-danger'">{{ req.status }}</span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-danger" @click="deleteRecord(req.id)">
+                      <i class="bi bi-trash"></i>
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -96,9 +133,24 @@
       </div>
 
       <div class="col-12 mt-4">
-        <h4 class="text-secondary">Simulate New Database Entry</h4>
-        <button class="btn btn-primary me-2" @click="submitMockRequest('Annual', 3, 1)">Submit Sibongile's Annual Leave</button>
-        <button class="btn btn-info" @click="submitMockRequest('Sick', 1, 2)">Submit Lungile's Sick Leave</button>
+        <div class="card shadow-sm">
+          <div class="card-header bg-info fw-bold text-white">Employee Attendance Logs</div>
+          <div class="card-body">
+            <div class="row">
+              <div v-for="group in attendanceGroups" :key="group.name" class="col-md-4 mb-3">
+                <div class="border rounded p-3 bg-white shadow-xs">
+                  <h6 class="fw-bold border-bottom pb-2 mb-2 text-dark">{{ group.name }}</h6>
+                  <div v-for="log in group.records" :key="log.date" class="d-flex justify-content-between small py-1">
+                    <span>{{ formatDate(log.date) }}</span>
+                    <span :class="log.status === 'Present' ? 'text-success fw-bold' : 'text-danger fw-bold'">
+                      {{ log.status }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -109,23 +161,22 @@ export default {
   name: 'TimeOff',
   data() {
     return {
-      loading: true, // Starts as true
+      loading: true,
       error: null,
       leaveBalances: [],
       timeOffRequests: [],
-      // Matches your backend route
-      apiBase: 'http://localhost:5000/api'
+      temporaryRequests: [], // New staging list
+      attendanceGroups: [],
+      apiBase: 'http://localhost:5000/api',
+      selectedBulkType: 'Annual'
     }
   },
   computed: {
-    pendingRequests() {
-      return this.timeOffRequests.filter(req => req.status === 'Pending');
-    },
+    // Only processed items coming from the DB history
     processedRequests() {
       return this.timeOffRequests.filter(req => req.status !== 'Pending');
     }
   },
-  // This triggers as soon as the page is ready
   async mounted() {
     await this.fetchData();
   },
@@ -133,50 +184,88 @@ export default {
     async fetchData() {
       this.loading = true;
       this.error = null;
+      this.temporaryRequests = []; // Clears the new requests dashboard on refresh
+
       try {
         const response = await fetch(`${this.apiBase}/timeoff`);
         if (!response.ok) throw new Error('Failed to fetch from server');
-
         const data = await response.json();
 
-        // 1. Map Leave Requests (Snake Case to Camel Case)
         this.timeOffRequests = data.requests.map(r => ({
           id: r.leave_id,
           employeeId: r.employee_id,
-          name: r.name,
+          name: r.employee_name,
           startDate: this.formatDate(r.start_date),
           endDate: this.formatDate(r.end_date),
           typeOfLeave: r.leave_type,
           status: r.status
         }));
 
-        // 2. Map Balances
         this.leaveBalances = data.balances.map(b => ({
           employeeId: b.employee_id,
-          name: b.name,
+          name: b.employee_name,
           annualBalance: b.annual_leave,
           sickBalance: b.sick_leave,
           familyBalance: b.family_leave
         }));
 
+        if (data.attendance) {
+          const groups = {};
+          data.attendance.forEach(record => {
+            if (!groups[record.employee_id]) {
+              groups[record.employee_id] = { name: record.employee_name, records: [] };
+            }
+            groups[record.employee_id].records.push({
+              date: record.date,
+              status: record.status
+            });
+          });
+          this.attendanceGroups = Object.values(groups);
+        }
+
       } catch (err) {
         this.error = err.message;
       } finally {
-        this.loading = false; // Stop the spinner
+        this.loading = false;
       }
     },
 
-    async updateRequestStatus(id, status) {
+    // New: Simply adds to the UI list. Does NOT touch the database.
+    submitBulkLeave() {
+      const type = this.selectedBulkType;
+      const today = new Date().toISOString().split('T')[0];
+
+      const newBatch = this.leaveBalances.map(employee => ({
+        id: 'temp-' + Date.now() + Math.random(),
+        employeeId: employee.employeeId,
+        name: employee.name,
+        startDate: today,
+        endDate: today,
+        typeOfLeave: type
+      }));
+
+      this.temporaryRequests = [...this.temporaryRequests, ...newBatch];
+    },
+
+    // New: This actually inserts the record into the database when approved
+    async approveRequest(req) {
       try {
-        const response = await fetch(`${this.apiBase}/timeoff/requests/${id}`, {
-          method: 'PUT',
+        const response = await fetch(`${this.apiBase}/timeoff/requests`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
+          body: JSON.stringify({
+            employee_id: req.employeeId,
+            leave_type: req.typeOfLeave,
+            start_date: req.startDate,
+            end_date: req.endDate,
+            reason: "Confirmed from dashboard",
+            status: 'Approved'
+          })
         });
 
         if (response.ok) {
-          // IMPORTANT: Re-fetch data.
-          // This ensures we see the balance deduction processed by your SQL Trigger!
+          // Remove from the temporary UI list and update DB data
+          this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
           await this.fetchData();
         }
       } catch (err) {
@@ -184,32 +273,23 @@ export default {
       }
     },
 
-    async submitMockRequest(type, days, empId) {
-      const start = new Date();
-      const end = new Date();
-      end.setDate(start.getDate() + days);
+    // New: Just removes the item from your screen
+    discardRequest(id) {
+      this.temporaryRequests = this.temporaryRequests.filter(req => req.id !== id);
+    },
 
-      const payload = {
-        employee_id: empId,
-        leave_type: type,
-        start_date: start.toISOString().split('T')[0],
-        end_date: end.toISOString().split('T')[0],
-        reason: "Simulated Request"
-      };
-
+    async deleteRecord(id) {
+      if (!confirm("Delete this history record?")) return;
       try {
-        await fetch(`${this.apiBase}/timeoff/requests`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        await this.fetchData();
+        const response = await fetch(`${this.apiBase}/timeoff/requests/${id}`, { method: 'DELETE' });
+        if (response.ok) await this.fetchData();
       } catch (err) {
-        console.error(err);
+        alert("Delete failed: " + err.message);
       }
     },
 
     formatDate(dateStr) {
+      if (!dateStr) return '';
       return new Date(dateStr).toISOString().split('T')[0];
     },
 

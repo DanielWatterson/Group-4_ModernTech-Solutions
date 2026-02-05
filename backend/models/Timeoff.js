@@ -17,7 +17,15 @@ const TimeOff = {
             throw error;
         }
     },
-
+    getAttendance: async () => {
+    const [rows] = await db.query(`
+        SELECT a.*, e.name as employee_name
+        FROM attendance a
+        JOIN employees e ON a.employee_id = e.employee_id
+        ORDER BY a.date DESC
+    `);
+    return rows;
+},
     // Fetch balances for all employees
     getBalances: async () => {
         try {
@@ -48,7 +56,7 @@ const TimeOff = {
     },
 
     // Create a new request
-    createRequest: async (data) => {
+      createRequest: async (data) => {
         try {
             const { employee_id, leave_type, start_date, end_date, reason } = data;
             const [result] = await db.query(
@@ -60,7 +68,15 @@ const TimeOff = {
             console.error('TimeOff.createRequest Error:', error);
             throw error;
         }
-    }
+    },
+    // Add these inside the TimeOff object
+     deleteRequest: async (leaveId) => {
+         return await db.query('DELETE FROM leave_requests WHERE leave_id = ?', [leaveId]);
+    },
+
+    clearPendingRequests: async () => {
+    return await db.query("DELETE FROM leave_requests WHERE status = 'Pending'");
+}
 };
 
 module.exports = TimeOff;

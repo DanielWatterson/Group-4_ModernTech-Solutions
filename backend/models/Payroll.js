@@ -2,64 +2,68 @@ const db = require('../config/database');
 
 class Payroll {
     static async findAll() {
-        const [rows] = await db.query(`
-            SELECT
-                e.employee_id, e.name, e.position, e.salary, e.department,
-                p.hours_worked, p.leave_deductions,
-                p.gross_pay, p.tax_deductions, p.net_pay
-            FROM employees e
-            LEFT JOIN payroll p ON e.employee_id = p.employee_id
-            ORDER BY e.employee_id
-        `);
-        return rows;
-    }
-
-    static async calculate(employeeId, data) {
-        const { hours_worked, leave_deductions } = data;
-
-        // 1. Get employee salary from the employees table
-        const [employee] = await db.query(
-            'SELECT salary FROM employees WHERE employee_id = ?',
-            [employeeId]
-        );
-
-        if (!employee.length) {
-            throw new Error('Employee not found');
-        }
-
-        // 2. Perform Calculations
-        const monthlySalary = parseFloat(employee[0].salary);
-        const dailyRate = monthlySalary / 22;
-        const leaveCost = dailyRate * (leave_deductions || 0);
-        const grossPayAfterLeave = monthlySalary - leaveCost;
-        const taxRate = 0.25;
-        const taxes = grossPayAfterLeave * taxRate;
-        const netPay = grossPayAfterLeave - taxes;
-
-        // 3. Save to database using your specific schema column names
-        // Note: Included payroll_date, base_salary, and is_processed to satisfy NOT NULL constraints
-        const [result] = await db.query(
-            `INSERT INTO payroll
-            (employee_id, payroll_date, hours_worked, leave_deductions, base_salary, gross_pay, tax_deductions, net_pay, is_processed, processed_at)
-            VALUES (?, CURDATE(), ?, ?, ?, ?, ?, ?, TRUE, NOW())
-            ON DUPLICATE KEY UPDATE
-            hours_worked = VALUES(hours_worked),
-            leave_deductions = VALUES(leave_deductions),
-            gross_pay = VALUES(gross_pay),
-            tax_deductions = VALUES(tax_deductions),
-            net_pay = VALUES(net_pay),
-            is_processed = TRUE,
-            processed_at = NOW()`,
-            [employeeId, hours_worked, leave_deductions, monthlySalary, grossPayAfterLeave, taxes, netPay]
-        );
-
-        return {
-            payroll_id: result.insertId || null,
-            gross_pay: grossPayAfterLeave,
-            tax_amount: taxes,
-            net_pay: netPay
-        };
-    }
+    const [rows] = await db.query(`
+        SELECT
+            e.employee_id, e.name, e.position, e.salary, e.department,
+            p.hours_worked,
+            -- This subquery pulls approved leave days from the Timeoff table
+            (SELECT COALESCE(SUM(DATEDIFF(end_date, start_date) + 1), 0)
+             FROM leave_requests
+             WHERE employee_id = e.employee_id
+             AND status = 'Approved'
+             AND MONTH(start_date) = MONTH(CURDATE())
+            ) AS leave_deductions,
+            p.gross_pay, p.tax_deductions, p.net_pay
+        FROM employees e
+        LEFT JOIN payroll p ON e.employee_id = p.employee_id
+        ORDER BY e.employee_id
+    `);
+    return rows;
 }
 
+static async calculate(employeeId, data) {
+    // 1. Get salary AND the count of approved leave days from the DB
+    const [employeeData] = await db.query(`
+        SELECT e.salary,
+        (SELECT COALESCE(SUM(DATEDIFF(end_date, start_date) + 1), 0)
+         FROM leave_requests
+         WHERE employee_id = e.employee_id
+         AND status = 'Approved'
+         AND MONTH(start_date) = MONTH(CURDATE())
+        ) AS approved_leave_days
+        FROM employees e
+        WHERE e.employee_id = ?`,
+        [employeeId]
+    );
+
+    if (employeeData.length === 0) throw new Error('Employee not found');
+
+    const monthlySalary = parseFloat(employeeData[0].salary);
+    const leaveDays = employeeData[0].approved_leave_days;
+
+    // 2. Perform Calculations
+    const dailyRate = monthlySalary / 22;
+    const leaveCost = dailyRate * leaveDays;
+    const grossPayAfterLeave = monthlySalary - leaveCost;
+    const taxRate = 0.25;
+    const taxes = grossPayAfterLeave * taxRate;
+    const netPay = grossPayAfterLeave - taxes;
+
+    // 3. Save (leave_deductions is now synced with the Timeoff count)
+    const [result] = await db.query(
+        `INSERT INTO payroll
+        (employee_id, payroll_date, hours_worked, leave_deductions, base_salary, gross_pay, tax_deductions, net_pay, is_processed, processed_at)
+        VALUES (?, CURDATE(), 160, ?, ?, ?, ?, ?, TRUE, NOW())
+        ON DUPLICATE KEY UPDATE
+        leave_deductions = VALUES(leave_deductions),
+        gross_pay = VALUES(gross_pay),
+        tax_deductions = VALUES(tax_deductions),
+        net_pay = VALUES(net_pay),
+        processed_at = NOW()`,
+        [employeeId, leaveDays, monthlySalary, grossPayAfterLeave, taxes, netPay]
+    );
+
+    return result;
+}
+}
 module.exports = Payroll;

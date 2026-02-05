@@ -20,17 +20,17 @@ let pool;
 try {
     pool = mysql.createPool(dbConfig);
     console.log('✅ Database pool created successfully');
-    
+
     // Test the connection
     (async () => {
         try {
             const connection = await pool.getConnection();
             console.log('✅ Database connection successful');
-            
+
             // Test a simple query
             const [rows] = await connection.query('SELECT 1 as connection_test');
             console.log('✅ Database test query result:', rows[0].connection_test);
-            
+
             connection.release();
         } catch (error) {
             console.error('❌ Database connection test failed:', error.message);

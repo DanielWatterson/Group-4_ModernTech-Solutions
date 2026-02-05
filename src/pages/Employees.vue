@@ -18,7 +18,18 @@
           </div>
         </div>
       </div>
-
+      <button class="btn btn-primary" @click="showForm = true">
+        <i class="bi bi-plus"></i> Add Employee
+      </button>
+      <button class="btn btn-sm btn-outline-primary" @click="editEmployee(employee)">
+        <i class="bi bi-pencil"></i> Edit
+</button>
+      <EmployeeForm
+      v-if="showForm"
+      :employee="selectedEmployee"
+      @saved="onEmployeeSaved"
+     @cancel="showForm = false"
+     />
       <!-- Connection Status -->
       <div v-if="connectionStatus" class="alert mb-4" :class="connectionStatus.class" role="alert">
         <div class="d-flex align-items-center">
@@ -176,7 +187,7 @@ export default {
           (employee.contact && employee.contact.toLowerCase().includes(searchLower));
 
         const matchesDept =
-          this.selectedDepartment === '' || 
+          this.selectedDepartment === '' ||
           employee.department === this.selectedDepartment;
 
         return matchesSearch && matchesDept;
@@ -191,7 +202,7 @@ export default {
   methods: {
     async loadEmployees() {
       this.loading = true;
-      
+
       try {
         // Try to fetch from API first
         await this.loadFromAPI();
@@ -211,7 +222,7 @@ export default {
     async loadFromAPI() {
       try {
         const response = await apiService.getEmployees();
-        
+
         if (response.success && response.data) {
           this.employees = response.data;
           this.connectionStatus = {
@@ -229,7 +240,7 @@ export default {
         } else {
           throw new Error('Unexpected API response format');
         }
-        
+
       } catch (error) {
         console.error('API fetch failed:', error);
         throw error;
@@ -238,9 +249,9 @@ export default {
 
     formatSalary(salary) {
       if (salary === null || salary === undefined) return '0.00';
-      return salary.toLocaleString('en-ZA', { 
+      return salary.toLocaleString('en-ZA', {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2 
+        maximumFractionDigits: 2
       });
     },
 
@@ -251,7 +262,7 @@ export default {
 
     departmentBadge(dept) {
       if (!dept) return 'bg-secondary';
-      
+
       const colors = {
         'Development': 'bg-primary',
         'Marketing': 'bg-success',
@@ -325,7 +336,7 @@ export default {
   .employees-page {
     padding: 15px;
   }
-  
+
   .card-body {
     padding: 1.25rem !important;
   }

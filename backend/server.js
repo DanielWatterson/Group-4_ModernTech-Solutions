@@ -22,7 +22,7 @@ app.use('/api', apiRoutes);
 
 // Test route
 app.get('/api/test', (req, res) => {
-    res.json({ 
+    res.json({
         message: 'Backend is working!',
         timestamp: new Date().toISOString(),
         database: 'MySQL'
@@ -74,14 +74,16 @@ app.use('*', (req, res) => {
         error: 'Endpoint not found',
         path: req.originalUrl,
         availableEndpoints: [
-            'GET /api/employees',
-            'GET /api/employees/:id',
-            'GET /api/dashboard',
-            'GET /api/health',
-            'GET /api/performance',
-            'GET /api/payroll',
-            'GET /api/timeoff'
-        ]
+          'GET /api/employees',
+          'GET /api/employees/:id',
+          'POST /api/employees',
+          'PATCH /api/employees/:id',
+          'GET /api/dashboard',
+          'GET /api/health',
+          'GET /api/performance',
+          'GET /api/payroll',
+          'GET /api/timeoff'
+]
     });
 });
 

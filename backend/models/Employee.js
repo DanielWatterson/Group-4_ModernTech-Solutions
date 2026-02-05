@@ -1,11 +1,13 @@
-// backend/models/Employee.js
 const db = require('../config/database');
 
 class Employee {
+
     // GET ALL EMPLOYEES
     static async findAll() {
         try {
-            const [rows] = await db.query('SELECT * FROM employees ORDER BY employee_id');
+            const [rows] = await db.query(
+                'SELECT * FROM employees ORDER BY employee_id'
+            );
             return rows;
         } catch (error) {
             console.error('Employee.findAll Error:', error);
@@ -16,7 +18,10 @@ class Employee {
     // GET BY ID
     static async findById(id) {
         try {
-            const [rows] = await db.query('SELECT * FROM employees WHERE employee_id = ?', [id]);
+            const [rows] = await db.query(
+                'SELECT * FROM employees WHERE employee_id = ?',
+                [id]
+            );
             return rows[0];
         } catch (error) {
             console.error('Employee.findById Error:', error);
@@ -28,7 +33,7 @@ class Employee {
     static async getDashboardStats() {
         try {
             const [rows] = await db.query(`
-                SELECT 
+                SELECT
                     COUNT(*) as total_employees,
                     COUNT(DISTINCT department) as total_departments,
                     AVG(salary) as avg_salary,
@@ -48,13 +53,13 @@ class Employee {
     static async getDepartmentStats() {
         try {
             const [rows] = await db.query(`
-                SELECT 
+                SELECT
                     department,
                     COUNT(*) as employee_count,
                     AVG(salary) as avg_salary,
                     SUM(salary) as total_salary
-                FROM employees 
-                GROUP BY department 
+                FROM employees
+                GROUP BY department
                 ORDER BY employee_count DESC
             `);
             return rows;
@@ -67,11 +72,12 @@ class Employee {
     // GET RECENT JOINERS
     static async getRecentJoiners(limit = 5) {
         try {
-            const [rows] = await db.query(`
-                SELECT * FROM employees 
-                ORDER BY recruitment_date DESC 
-                LIMIT ?
-            `, [limit]);
+            const [rows] = await db.query(
+                `SELECT * FROM employees
+                 ORDER BY recruitment_date DESC
+                 LIMIT ?`,
+                [limit]
+            );
             return rows;
         } catch (error) {
             console.error('Employee.getRecentJoiners Error:', error);
@@ -89,6 +95,70 @@ class Employee {
             return rows;
         } catch (error) {
             console.error('Employee.getByDepartment Error:', error);
+            throw error;
+        }
+    }
+
+    // CREATE EMPLOYEE
+    static async create(data) {
+        try {
+            const {
+                name,
+                position,
+                department,
+                salary,
+                email,
+                employment_history,
+                recruitment_date,
+                days_off
+            } = data;
+
+            const [result] = await db.query(
+                `INSERT INTO employees
+                (name, position, department, salary, email, employment_history, recruitment_date, days_off)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    name,
+                    position,
+                    department,
+                    salary,
+                    email,
+                    employment_history || null,
+                    recruitment_date || new Date(),
+                    days_off || 0
+                ]
+            );
+
+            return { employee_id: result.insertId, ...data };
+        } catch (error) {
+            console.error('Employee.create Error:', error);
+            throw error;
+        }
+    }
+
+    // UPDATE EMPLOYEE (PARTIAL UPDATE)
+    static async updateById(id, data) {
+        try {
+            const fields = [];
+            const values = [];
+
+            Object.entries(data).forEach(([key, value]) => {
+                fields.push(`${key} = ?`);
+                values.push(value);
+            });
+
+            if (fields.length === 0) return null;
+
+            values.push(id);
+
+            const [result] = await db.query(
+                `UPDATE employees SET ${fields.join(', ')} WHERE employee_id = ?`,
+                values
+            );
+
+            return result.affectedRows > 0;
+        } catch (error) {
+            console.error('Employee.updateById Error:', error);
             throw error;
         }
     }

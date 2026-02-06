@@ -1,7 +1,6 @@
 <template>
   <div class="employees-page">
     <div class="container-fluid">
-      <!-- Header Section -->
       <div class="row align-items-center mb-4">
         <div class="col-md-6">
           <h1 class="h2 fw-bold mb-2">Employees Directory</h1>
@@ -12,26 +11,25 @@
             <div v-if="loading" class="spinner-border spinner-border-sm text-primary me-2" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
+            <button class="btn btn-primary shadow-sm" @click="addNewEmployee">
+              <i class="bi bi-plus-lg"></i> Add Employee
+            </button>
             <button @click="loadEmployees" class="btn btn-outline-primary btn-sm" :disabled="loading">
               <i class="bi bi-arrow-clockwise"></i> Refresh
             </button>
           </div>
         </div>
       </div>
-      <button class="btn btn-primary" @click="showForm = true">
-        <i class="bi bi-plus"></i> Add Employee
-      </button>
-      <button class="btn btn-sm btn-outline-primary" @click="editEmployee(employee)">
-        <i class="bi bi-pencil"></i> Edit
-</button>
-      <EmployeeForm
-      v-if="showForm"
-      :employee="selectedEmployee"
-      @saved="onEmployeeSaved"
-     @cancel="showForm = false"
-     />
-      <!-- Connection Status -->
-      <div v-if="connectionStatus" class="alert mb-4" :class="connectionStatus.class" role="alert">
+
+      <div v-if="showForm" class="mb-5">
+        <EmployeeForm
+          :employee="selectedEmployee"
+          @saved="onEmployeeSaved"
+          @cancel="closeForm"
+        />
+      </div>
+
+      <div v-if="connectionStatus" class="alert mb-4 alert-dismissible fade show" :class="connectionStatus.class" role="alert">
         <div class="d-flex align-items-center">
           <i class="bi me-2" :class="connectionStatus.icon"></i>
           <div class="flex-grow-1">{{ connectionStatus.message }}</div>
@@ -39,7 +37,6 @@
         </div>
       </div>
 
-      <!-- Search & Filter Section -->
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
           <div class="row g-3">
@@ -69,21 +66,10 @@
         </div>
       </div>
 
-      <!-- No Results Message -->
-      <div v-if="!loading && filteredEmployees.length === 0" class="card border-0 shadow-sm">
-        <div class="card-body text-center py-5">
-          <i class="bi bi-people fs-1 text-muted mb-3"></i>
-          <h5 class="text-muted mb-2">No employees found</h5>
-          <p class="text-muted mb-0">Try adjusting your search or filter criteria</p>
-        </div>
-      </div>
-
-      <!-- Employee Cards Grid -->
-      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      <div v-if="!loading" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         <div v-for="employee in filteredEmployees" :key="employee.employee_id || employee.employeeId" class="col">
           <div class="card employee-card h-100 border-0 shadow-sm">
             <div class="card-body p-4">
-              <!-- Employee Header -->
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
                   <h5 class="fw-bold mb-1">{{ employee.name }}</h5>
@@ -94,11 +80,10 @@
                 </span>
               </div>
 
-              <!-- Employee Details -->
               <div class="mb-4">
                 <div class="d-flex align-items-center mb-2">
                   <i class="bi bi-envelope text-muted me-2" style="width: 20px;"></i>
-                  <span class="text-truncate">{{ employee.email || employee.contact || 'N/A' }}</span>
+                  <span class="text-truncate">{{ employee.email || 'N/A' }}</span>
                 </div>
                 <div class="d-flex align-items-center mb-2">
                   <i class="bi bi-cash-coin text-muted me-2" style="width: 20px;"></i>
@@ -106,19 +91,19 @@
                     R{{ formatSalary(employee.salary) }}
                   </span>
                 </div>
-                <div v-if="employee.employment_history" class="mt-3">
-                  <small class="text-muted d-block mb-1">Experience:</small>
-                  <p class="mb-0 small">{{ truncateText(employee.employment_history, 100) }}</p>
-                </div>
               </div>
 
-              <!-- Footer -->
               <div class="border-top pt-3">
                 <div class="d-flex justify-content-between align-items-center">
                   <small class="text-muted">ID: {{ employee.employee_id || employee.employeeId || 'N/A' }}</small>
-                  <button class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-eye"></i> View
-                  </button>
+                  <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" @click="editEmployee(employee)">
+                      <i class="bi bi-pencil"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary">
+                      <i class="bi bi-eye"></i> View
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -126,28 +111,14 @@
         </div>
       </div>
 
-      <!-- Loading State -->
-      <div v-if="loading" class="text-center py-5">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-3 text-muted">Loading employee data...</p>
+      <div v-if="!loading && filteredEmployees.length === 0" class="text-center py-5">
+        <i class="bi bi-people fs-1 text-muted mb-3"></i>
+        <h5 class="text-muted">No employees found</h5>
       </div>
 
-      <!-- Summary Footer -->
-      <div v-if="!loading && filteredEmployees.length > 0" class="mt-4 pt-3 border-top">
-        <div class="row align-items-center">
-          <div class="col-md-6">
-            <p class="text-muted mb-0">
-              Showing {{ filteredEmployees.length }} of {{ employees.length }} employees
-            </p>
-          </div>
-          <div class="col-md-6 text-md-end">
-            <button @click="loadEmployees" class="btn btn-link text-decoration-none text-primary">
-              <i class="bi bi-arrow-clockwise me-1"></i>Refresh Data
-            </button>
-          </div>
-        </div>
+      <div v-if="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Refreshing employee directory...</p>
       </div>
     </div>
   </div>
@@ -155,9 +126,13 @@
 
 <script>
 import apiService from '@/services/api';
+import EmployeeForm from './EmployeeForm.vue'; // Make sure the file name matches exactly
 
 export default {
   name: 'Employees',
+  components: {
+    EmployeeForm
+  },
 
   data() {
     return {
@@ -165,15 +140,15 @@ export default {
       selectedDepartment: '',
       employees: [],
       loading: false,
-      connectionStatus: null
+      connectionStatus: null,
+      showForm: false,
+      selectedEmployee: null
     }
   },
 
   computed: {
     uniqueDepartments() {
-      const departments = this.employees
-        .map((e) => e.department)
-        .filter(Boolean);
+      const departments = this.employees.map((e) => e.department).filter(Boolean);
       return [...new Set(departments)].sort();
     },
 
@@ -183,8 +158,7 @@ export default {
         const matchesSearch =
           (employee.name && employee.name.toLowerCase().includes(searchLower)) ||
           (employee.position && employee.position.toLowerCase().includes(searchLower)) ||
-          (employee.email && employee.email.toLowerCase().includes(searchLower)) ||
-          (employee.contact && employee.contact.toLowerCase().includes(searchLower));
+          (employee.email && employee.email.toLowerCase().includes(searchLower));
 
         const matchesDept =
           this.selectedDepartment === '' ||
@@ -200,90 +174,77 @@ export default {
   },
 
   methods: {
+    // --- FORM LOGIC ---
+    addNewEmployee() {
+      this.selectedEmployee = null; // Blank form for new entry
+      this.showForm = true;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    editEmployee(employee) {
+      this.selectedEmployee = { ...employee }; // Pass existing data
+      this.showForm = true;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    closeForm() {
+      this.showForm = false;
+      this.selectedEmployee = null;
+    },
+
+    async onEmployeeSaved() {
+      this.closeForm();
+      await this.loadEmployees(); // Reload list to show changes
+      this.connectionStatus = {
+        class: 'alert-success',
+        icon: 'bi-check-circle',
+        message: 'Employee records updated successfully!'
+      };
+    },
+
+    // --- DATA FETCHING ---
     async loadEmployees() {
       this.loading = true;
-
       try {
-        // Try to fetch from API first
-        await this.loadFromAPI();
+        const response = await apiService.getEmployees();
+        if (response.success && response.data) {
+          this.employees = response.data;
+        } else if (Array.isArray(response)) {
+          this.employees = response;
+        }
       } catch (error) {
-        console.warn('API fetch failed:', error.message);
         this.connectionStatus = {
           class: 'alert-warning',
           icon: 'bi-exclamation-triangle',
-          message: `API Connection Failed: ${error.message}`
+          message: `Connection Error: ${error.message}`
         };
-        // Note: JSON fallback has been removed as requested
       } finally {
         this.loading = false;
       }
     },
 
-    async loadFromAPI() {
-      try {
-        const response = await apiService.getEmployees();
-
-        if (response.success && response.data) {
-          this.employees = response.data;
-          this.connectionStatus = {
-            class: 'alert-success',
-            icon: 'bi-check-circle',
-            message: `Connected to database (${this.employees.length} employees loaded)`
-          };
-        } else if (Array.isArray(response)) {
-          this.employees = response;
-          this.connectionStatus = {
-            class: 'alert-success',
-            icon: 'bi-check-circle',
-            message: `Connected to database (${response.length} employees loaded)`
-          };
-        } else {
-          throw new Error('Unexpected API response format');
-        }
-
-      } catch (error) {
-        console.error('API fetch failed:', error);
-        throw error;
-      }
-    },
-
     formatSalary(salary) {
-      if (salary === null || salary === undefined) return '0.00';
-      return salary.toLocaleString('en-ZA', {
+      if (!salary) return '0.00';
+      return Number(salary).toLocaleString('en-ZA', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       });
     },
 
-    truncateText(text, maxLength) {
-      if (!text || text.length <= maxLength) return text;
-      return text.substring(0, maxLength) + '...';
-    },
-
     departmentBadge(dept) {
-      if (!dept) return 'bg-secondary';
-
       const colors = {
         'Development': 'bg-primary',
         'Marketing': 'bg-success',
         'IT': 'bg-info',
-        'Design': 'bg-warning',
         'Finance': 'bg-danger',
-        'Support': 'bg-secondary',
-        'Sales': 'bg-dark',
-        'QA': 'bg-primary',
-        'HR': 'bg-success',
-        'Human Resources': 'bg-danger',
-        'Quality Assurance': 'bg-warning text-dark',
+        'HR': 'bg-danger',
       };
       return colors[dept] || 'bg-secondary';
     },
 
     salaryColor(salary) {
-      if (salary === null || salary === undefined) return 'text-muted';
-      if (salary >= 70000) return 'text-success';
-      if (salary >= 60000) return 'text-warning';
-      return 'text-danger';
+      if (!salary) return 'text-muted';
+      return salary >= 60000 ? 'text-success' : 'text-danger';
     }
   }
 }

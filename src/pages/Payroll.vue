@@ -1,7 +1,6 @@
 <template>
   <div class="payroll">
     <div class="container-fluid">
-      <!-- Header -->
       <div class="row align-items-center mb-4">
         <div class="col-md-8">
           <h1 class="h2 fw-bold mb-2">Payroll Management</h1>
@@ -19,7 +18,6 @@
         </div>
       </div>
 
-      <!-- Loading State -->
       <div v-if="loading" class="card border-0 shadow-sm">
         <div class="card-body text-center py-5">
           <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
@@ -29,7 +27,6 @@
         </div>
       </div>
 
-      <!-- Error State -->
       <div v-else-if="error" class="alert alert-danger alert-dismissible fade show">
         <div class="d-flex align-items-start">
           <i class="bi bi-exclamation-triangle me-3 fs-4 flex-shrink-0"></i>
@@ -44,9 +41,7 @@
         </div>
       </div>
 
-      <!-- Main Content -->
       <div v-else>
-        <!-- Quick Actions -->
         <div class="row g-3 mb-4">
           <div class="col-xl-3 col-md-6">
             <div class="card border-0 shadow-sm h-100">
@@ -117,7 +112,6 @@
           </div>
         </div>
 
-        <!-- Action Buttons -->
         <div class="card border-0 shadow-sm mb-4">
           <div class="card-header bg-white border-bottom">
             <h5 class="mb-0">
@@ -126,22 +120,22 @@
           </div>
           <div class="card-body">
             <div class="d-flex gap-3">
-              <button 
-                class="btn btn-primary d-flex align-items-center gap-2" 
-                @click="runPayrollSimulation" 
+              <button
+                class="btn btn-primary d-flex align-items-center gap-2"
+                @click="runPayrollSimulation"
                 :disabled="allCalculated"
               >
                 <i class="bi bi-calculator-fill"></i>
                 {{ allCalculated ? 'Payroll Fully Processed' : 'Run Payroll Simulation' }}
               </button>
-              <button 
-                class="btn btn-outline-secondary d-flex align-items-center gap-2" 
+              <button
+                class="btn btn-outline-secondary d-flex align-items-center gap-2"
                 @click="resetPayroll"
               >
                 <i class="bi bi-arrow-clockwise"></i> Reset Payroll Data
               </button>
-              <button 
-                class="btn btn-outline-success d-flex align-items-center gap-2 ms-auto" 
+              <button
+                class="btn btn-outline-success d-flex align-items-center gap-2 ms-auto"
                 @click="exportToExcel"
               >
                 <i class="bi bi-file-earmark-excel"></i> Export to Excel
@@ -150,18 +144,17 @@
           </div>
         </div>
 
-        <!-- Payroll Table -->
         <div class="card border-0 shadow-sm mb-4">
           <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
               <i class="bi bi-table text-primary me-2"></i>Employee Payroll Data
             </h5>
             <div class="d-flex gap-2">
-              <input 
-                type="text" 
-                v-model="searchQuery" 
-                class="form-control form-control-sm" 
-                placeholder="Search employees..." 
+              <input
+                type="text"
+                v-model="searchQuery"
+                class="form-control form-control-sm"
+                placeholder="Search employees..."
                 style="width: 200px;"
               />
               <select v-model="selectedDepartment" class="form-select form-select-sm" style="width: auto;">
@@ -189,7 +182,7 @@
                   <tr v-for="employee in filteredEmployees" :key="employee.employeeId">
                     <td>
                       <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" 
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
                              style="width: 40px; height: 40px;">
                           {{ getInitials(employee.name) }}
                         </div>
@@ -210,8 +203,8 @@
                       <div class="d-flex align-items-center">
                         <span>{{ employee.hoursWorked }}</span>
                         <div class="progress ms-2 flex-grow-1" style="height: 6px; width: 60px;">
-                          <div 
-                            class="progress-bar bg-success" 
+                          <div
+                            class="progress-bar bg-success"
                             :style="{ width: Math.min((employee.hoursWorked / 160) * 100, 100) + '%' }"
                           ></div>
                         </div>
@@ -224,11 +217,12 @@
                     </td>
                     <td class="text-end">
                       <div :class="{ 'fw-bold text-success': employee.isCalculated }">
-                        {{
-                          employee.isCalculated
-                            ? `R${employee.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`
-                            : '<span class="text-muted fst-italic">Pending</span>'
-                        }}
+                        <template v-if="employee.isCalculated">
+                          R{{ employee.netPay.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
+                        </template>
+                        <template v-else>
+                          <span class="text-muted fst-italic">Pending</span>
+                        </template>
                       </div>
                       <small v-if="employee.isCalculated" class="text-muted d-block">
                         Tax: R{{ employee.taxes.toLocaleString('en-ZA', { minimumFractionDigits: 2 }) }}
@@ -246,8 +240,7 @@
                   </tr>
                 </tbody>
               </table>
-              
-              <!-- No Results -->
+
               <div v-if="filteredEmployees.length === 0" class="text-center py-5">
                 <i class="bi bi-cash fs-1 text-muted mb-3"></i>
                 <h5 class="text-muted mb-2">No payroll data found</h5>
@@ -257,11 +250,10 @@
           </div>
         </div>
 
-        <!-- Summary Footer -->
         <div class="mt-4 pt-3 border-top">
           <div class="d-flex justify-content-between align-items-center">
             <div class="text-muted small">
-              <i class="bi bi-database me-1"></i> Connected to MySQL database | 
+              <i class="bi bi-database me-1"></i> Connected to MySQL database |
               Showing {{ filteredEmployees.length }} of {{ employeesWithPayData.length }} records
             </div>
             <button @click="fetchPayrollData" class="btn btn-link text-decoration-none">
@@ -272,7 +264,6 @@
       </div>
     </div>
 
-    <!-- Payslip Modal -->
     <div v-if="showPayslipModal" class="modal-backdrop fade show d-flex align-items-center justify-content-center">
       <div class="modal fade show d-block" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -294,7 +285,7 @@
                         <strong>Position:</strong> {{ selectedPayslip.position }}
                       </p>
                       <p class="mb-2">
-                        <strong>Department:</strong> 
+                        <strong>Department:</strong>
                         <span class="badge" :class="getDepartmentClass(selectedPayslip.department)">
                           {{ selectedPayslip.department }}
                         </span>
@@ -413,9 +404,9 @@ export default {
     },
     filteredEmployees() {
       return this.employeesWithPayData.filter(emp => {
-        const matchesSearch = this.searchQuery === '' || 
+        const matchesSearch = this.searchQuery === '' ||
           emp.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-        const matchesDept = this.selectedDepartment === '' || 
+        const matchesDept = this.selectedDepartment === '' ||
           emp.department === this.selectedDepartment
         return matchesSearch && matchesDept
       })
@@ -444,7 +435,7 @@ export default {
           grossPayAfterLeave: parseFloat(emp.gross_pay) || 0,
           taxes: parseFloat(emp.tax_deductions) || 0,
           netPay: parseFloat(emp.net_pay) || 0,
-          isCalculated: emp.net_pay !== null && parseFloat(emp.net_pay) > 0,
+          isCalculated: emp.net_pay !== null,
           leaveCost: (parseFloat(emp.salary) / 22) * (emp.leave_deductions || 0)
         }));
       } catch (err) {
@@ -664,11 +655,11 @@ export default {
   .payroll {
     padding: 15px;
   }
-  
+
   .card-body {
     padding: 1rem !important;
   }
-  
+
   .modal-dialog {
     margin: 1rem;
   }

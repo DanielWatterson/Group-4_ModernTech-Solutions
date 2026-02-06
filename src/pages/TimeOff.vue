@@ -1,7 +1,6 @@
 <template>
   <div class="timeoff">
     <div class="container-fluid">
-      <!-- Header -->
       <div class="row align-items-center mb-4">
         <div class="col-md-8">
           <h1 class="h2 fw-bold mb-2">Time Off Management</h1>
@@ -19,7 +18,6 @@
         </div>
       </div>
 
-      <!-- Loading State -->
       <div v-if="loading" class="card border-0 shadow-sm">
         <div class="card-body text-center py-5">
           <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
@@ -29,7 +27,6 @@
         </div>
       </div>
 
-      <!-- Error State -->
       <div v-else-if="error" class="alert alert-danger alert-dismissible fade show">
         <div class="d-flex align-items-start">
           <i class="bi bi-exclamation-triangle me-3 fs-4 flex-shrink-0"></i>
@@ -44,9 +41,7 @@
         </div>
       </div>
 
-      <!-- Main Content -->
       <div v-else>
-        <!-- KPI Cards -->
         <div class="row g-3 mb-4">
           <div class="col-xl-3 col-md-6">
             <div class="card border-0 shadow-sm h-100">
@@ -117,7 +112,6 @@
           </div>
         </div>
 
-        <!-- Bulk Leave Action -->
         <div class="card border-0 shadow-sm mb-4">
           <div class="card-header bg-white border-bottom">
             <h5 class="mb-0">
@@ -150,9 +144,7 @@
           </div>
         </div>
 
-        <!-- Pending Requests & Leave Balances -->
         <div class="row g-4 mb-4">
-          <!-- Pending Requests -->
           <div class="col-lg-8">
             <div class="card border-0 shadow-sm h-100">
               <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
@@ -180,7 +172,7 @@
                       <tr v-for="request in temporaryRequests" :key="request.id">
                         <td>
                           <div class="d-flex align-items-center">
-                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" 
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
                                  style="width: 40px; height: 40px;">
                               {{ getInitials(request.name) }}
                             </div>
@@ -206,7 +198,7 @@
                             <button class="btn btn-sm btn-success" @click="approveRequest(request)">
                               <i class="bi bi-check-lg"></i> Approve
                             </button>
-                            <button class="btn btn-sm btn-danger" @click="discardRequest(request.id)">
+                            <button class="btn btn-sm btn-danger" @click="denyRequest(request)">
                               <i class="bi bi-x-lg"></i> Deny
                             </button>
                           </div>
@@ -224,7 +216,6 @@
             </div>
           </div>
 
-          <!-- Leave Balances -->
           <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100">
               <div class="card-header bg-white border-bottom">
@@ -234,7 +225,7 @@
               </div>
               <div class="card-body" style="max-height: 400px; overflow-y: auto">
                 <div class="list-group list-group-flush">
-                  <div v-for="balance in leaveBalances.slice(0, 8)" :key="balance.employeeId" 
+                  <div v-for="balance in leaveBalances.slice(0, 8)" :key="balance.employeeId"
                        class="list-group-item border-0 px-0 py-3">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                       <div>
@@ -287,9 +278,7 @@
           </div>
         </div>
 
-        <!-- Leave History & Attendance -->
         <div class="row g-4">
-          <!-- Leave History -->
           <div class="col-lg-8">
             <div class="card border-0 shadow-sm h-100">
               <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
@@ -297,9 +286,10 @@
                   <i class="bi bi-clock-history text-primary me-2"></i>Leave History
                 </h5>
                 <select v-model="historyFilter" class="form-select form-select-sm" style="width: auto;">
-                  <option value="">All Status</option>
+                  <option value="">All History</option>
                   <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
+                  <option value="Denied">Denied</option>
+                  <option value="Pending">Pending</option>
                 </select>
               </div>
               <div class="card-body">
@@ -319,7 +309,7 @@
                       <tr v-for="req in filteredHistory" :key="req.id">
                         <td>
                           <div class="d-flex align-items-center">
-                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" 
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
                                  style="width: 40px; height: 40px;">
                               {{ getInitials(req.name) }}
                             </div>
@@ -336,7 +326,11 @@
                         </td>
                         <td>{{ calculateDays(req.startDate, req.endDate) }} days</td>
                         <td>
-                          <span :class="req.status === 'Approved' ? 'badge bg-success' : 'badge bg-danger'">
+                          <span :class="{
+                            'badge bg-success': req.status === 'Approved',
+                            'badge bg-danger': req.status === 'Denied' || req.status === 'Rejected',
+                            'badge bg-warning text-dark': req.status === 'Pending'
+                          }">
                             {{ req.status }}
                           </span>
                         </td>
@@ -361,7 +355,6 @@
             </div>
           </div>
 
-          <!-- Attendance Logs -->
           <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100">
               <div class="card-header bg-white border-bottom">
@@ -371,10 +364,10 @@
               </div>
               <div class="card-body">
                 <div class="list-group list-group-flush">
-                  <div v-for="group in attendanceGroups.slice(0, 5)" :key="group.name" 
+                  <div v-for="group in attendanceGroups.slice(0, 5)" :key="group.name"
                        class="list-group-item border-0 px-0 py-3">
                     <div class="d-flex align-items-center mb-3">
-                      <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" 
+                      <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
                            style="width: 40px; height: 40px;">
                         {{ getInitials(group.name) }}
                       </div>
@@ -403,12 +396,11 @@
           </div>
         </div>
 
-        <!-- Summary Footer -->
         <div class="mt-4 pt-3 border-top">
           <div class="d-flex justify-content-between align-items-center">
             <div class="text-muted small">
-              <i class="bi bi-database me-1"></i> Connected to MySQL database | 
-              Showing {{ filteredHistory.length }} of {{ processedRequests.length }} historical records
+              <i class="bi bi-database me-1"></i> Connected to MySQL database |
+              Showing {{ filteredHistory.length }} historical records
             </div>
             <button @click="fetchData" class="btn btn-link text-decoration-none">
               <i class="bi bi-arrow-clockwise me-1"></i>Refresh Data
@@ -438,7 +430,8 @@ export default {
   },
   computed: {
     processedRequests() {
-      return this.timeOffRequests.filter(req => req.status !== 'Pending');
+      // FIX: Showing all items from the DB in history so we can see updated statuses
+      return this.timeOffRequests;
     },
     filteredHistory() {
       if (!this.historyFilter) return this.processedRequests;
@@ -452,7 +445,10 @@ export default {
     },
     totalLeaveDays() {
       return this.processedRequests.reduce((total, req) => {
-        return total + this.calculateDays(req.startDate, req.endDate);
+        if (req.status === 'Approved') {
+          return total + this.calculateDays(req.startDate, req.endDate);
+        }
+        return total;
       }, 0);
     },
     onLeaveCount() {
@@ -484,7 +480,7 @@ export default {
           startDate: this.formatDate(r.start_date),
           endDate: this.formatDate(r.end_date),
           typeOfLeave: r.leave_type,
-          status: r.status
+          status: r.status // Will now show Approved/Denied correctly
         }));
 
         this.leaveBalances = data.balances.map(b => ({
@@ -519,8 +515,11 @@ export default {
     submitBulkLeave() {
       const type = this.selectedBulkType;
       const today = new Date().toISOString().split('T')[0];
+      const selectedEmployees = this.leaveBalances
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3);
 
-      const newBatch = this.leaveBalances.map(employee => ({
+      const newBatch = selectedEmployees.map(employee => ({
         id: 'temp-' + Date.now() + Math.random(),
         employeeId: employee.employeeId,
         name: employee.name,
@@ -542,14 +541,38 @@ export default {
             leave_type: req.typeOfLeave,
             start_date: req.startDate,
             end_date: req.endDate,
-            reason: "Confirmed from dashboard",
-            status: 'Approved'
+            reason: "Dashboard Approval",
+            status: 'Approved' // EXPLICITLY SETTING STATUS
           })
         });
 
         if (response.ok) {
           this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
-          await this.fetchData();
+          await this.fetchData(); // REFRESH UI FROM DB
+        }
+      } catch (err) {
+        alert("Action failed: " + err.message);
+      }
+    },
+
+    async denyRequest(req) {
+      try {
+        const response = await fetch(`${this.apiBase}/timeoff/requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employee_id: req.employeeId,
+            leave_type: req.typeOfLeave,
+            start_date: req.startDate,
+            end_date: req.endDate,
+            reason: "Dashboard Denial",
+            status: 'Denied' // EXPLICITLY SETTING STATUS
+          })
+        });
+
+        if (response.ok) {
+          this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
+          await this.fetchData(); // REFRESH UI FROM DB
         }
       } catch (err) {
         alert("Action failed: " + err.message);
@@ -709,11 +732,11 @@ export default {
   .timeoff {
     padding: 15px;
   }
-  
+
   .card-body {
     padding: 1rem !important;
   }
-  
+
   .table th,
   .table td {
     padding: 0.5rem;

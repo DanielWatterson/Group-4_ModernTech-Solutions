@@ -21,7 +21,7 @@ exports.calculateAll = async (req, res) => {
             return res.status(404).json({ error: "No employees found to process" });
         }
 
-        // Logic: For every employee, run the Model.calculate function.
+        // For every employee, run the Model.calculate function.
         // This function inside the model is what looks at the leave_requests table.
         const promises = employees.map(emp => {
             return Payroll.calculate(emp.employee_id);

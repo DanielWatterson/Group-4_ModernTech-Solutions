@@ -39,6 +39,7 @@
       </div>
 
       <!-- Offline/Fallback Mode Alert -->
+
       <div v-if="isOfflineMode" class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
         <div class="d-flex align-items-center">
           <i class="bi bi-database-exclamation me-2"></i>

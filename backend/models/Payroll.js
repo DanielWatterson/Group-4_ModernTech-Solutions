@@ -62,7 +62,7 @@ class Payroll {
         return result;
     }
 
-    // NEW: Reset functionality to clear duplicates
+    // Reset functionality to clear duplicates (common logic error found when refreshing page)
     static async resetAll() {
         return await db.query('TRUNCATE TABLE payroll');
     }

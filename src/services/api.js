@@ -1,4 +1,3 @@
-// src/services/api.js
 import employeeData from '../data/employee_info.json'; // Employee Data imported for fallback information 
 
 const API_BASE = 'http://localhost:5000/api';

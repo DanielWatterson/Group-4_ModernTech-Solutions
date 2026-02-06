@@ -665,7 +665,8 @@ export default {
   }
 }
 
-/* FIX MODAL TRANSPARENCY - ADDED FIX */
+/* Modal Transparency */ 
+
 .modal-content,
 .modal-content .bg-light,
 .modal-content .alert-info {

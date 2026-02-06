@@ -11,7 +11,7 @@ exports.login = async (req, res) => {
   }
 
   try {
-    // Direct database query to match your SQL structure
+    // This is a direct database query to match SQL structure
     const [users] = await db.query(
       `SELECT user_id, name, role, department, email, avatar, password_hash
       FROM users
@@ -29,7 +29,7 @@ exports.login = async (req, res) => {
 
     const user = users[0];
 
-    // Check password (plain text comparison as in your SQL)
+    // Check password
     if (user.password_hash !== password) {
       return res.status(401).json({
         success: false,

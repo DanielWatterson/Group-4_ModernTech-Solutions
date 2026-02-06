@@ -208,7 +208,7 @@ async function login() {
       localStorage.setItem('userAvatar', user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=0d6efd&color=fff`)
       localStorage.setItem('userId', user.id)
       
-      // Remember email if checkbox is checked
+      // Remember email if checkbox is checked 
       if (rememberMe.value) {
         localStorage.setItem('rememberedEmail', user.email)
       } else {

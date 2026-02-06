@@ -57,18 +57,18 @@ const TimeOff = {
 
     // Create a new request
       createRequest: async (data) => {
-        try {
-            const { employee_id, leave_type, start_date, end_date, reason } = data;
-            const [result] = await db.query(
-                'INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, reason) VALUES (?, ?, ?, ?, ?)',
-                [employee_id, leave_type, start_date, end_date, reason]
-            );
-            return result.insertId;
-        } catch (error) {
+       try {
+          const { employee_id, leave_type, start_date, end_date, reason, status = 'Pending' } = data;
+         const [result] = await db.query(
+            'INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, ?)',
+            [employee_id, leave_type, start_date, end_date, reason, status]
+        );
+          return result.insertId;
+          } catch (error) {
             console.error('TimeOff.createRequest Error:', error);
             throw error;
-        }
-    },
+    }
+},
     // Add these inside the TimeOff object
      deleteRequest: async (leaveId) => {
          return await db.query('DELETE FROM leave_requests WHERE leave_id = ?', [leaveId]);

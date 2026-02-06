@@ -6,7 +6,7 @@ exports.getTimeOffData = async (req, res) => {
         const requests = await TimeOff.getAllRequests();
         const balances = await TimeOff.getBalances();
         const attendance = await TimeOff.getAttendance();
-        
+
         res.json({
             success: true,
             requests,
@@ -59,9 +59,21 @@ exports.updateRequestStatus = async (req, res) => {
     }
 };
 
+// In backend/controllers/timeoffController.js - submitRequest function
 exports.submitRequest = async (req, res) => {
     try {
-        const requestId = await TimeOff.createRequest(req.body);
+        // Allow status to be passed in request body
+        const { employee_id, leave_type, start_date, end_date, reason, status = 'Pending' } = req.body;
+
+        const requestId = await TimeOff.createRequest({
+            employee_id,
+            leave_type,
+            start_date,
+            end_date,
+            reason,
+            status // Pass status to model
+        });
+
         res.status(201).json({
             success: true,
             message: 'Request submitted',
@@ -80,14 +92,14 @@ exports.submitRequest = async (req, res) => {
 exports.deleteRequest = async (req, res) => {
     try {
         await TimeOff.deleteRequest(req.params.id);
-        res.json({ 
-            success: true, 
-            message: 'Record deleted' 
+        res.json({
+            success: true,
+            message: 'Record deleted'
         });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 };
@@ -95,14 +107,14 @@ exports.deleteRequest = async (req, res) => {
 exports.clearPending = async (req, res) => {
     try {
         await TimeOff.clearPendingRequests();
-        res.json({ 
-            success: true, 
-            message: 'All pending requests cleared' 
+        res.json({
+            success: true,
+            message: 'All pending requests cleared'
         });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 };

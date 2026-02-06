@@ -1,6 +1,22 @@
-# HR Web-Based Application
+# HR Web-Based Application — Quick Setup
 
-This template should help get you started developing with Vue 3 in Vite.
+This project uses **Vue 3** for the frontend and **Node.js/Express** for the backend.  
+It also uses **Axios** for API requests and **Chart.js** for charts.
+
+---
+
+## Project Dependencies
+
+### Frontend
+- **Vue 3**  
+- **Axios** (for HTTP requests)  
+- **Chart.js** (for charts and graphs)
+
+### Backend
+- **Node.js**  
+- **Express** (for API routing)
+
+---
 
 ## Recommended IDE Setup
 
@@ -19,26 +35,47 @@ This template should help get you started developing with Vue 3 in Vite.
 
 See [Vite Configuration Reference](https://vite.dev/config/).
 
-## Project Setup
+## Installation & Setup
 
-```sh
+### 1️⃣ Clone the repository
+
+```bash
+git clone <your-repo-url>
+cd <project-root>
+```
+
+### 2️⃣ Install frontend dependencies (root folder)
+
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### 3️⃣ Install backend dependencies (backend folder)
 
-```sh
+Open a new terminal, then:
+
+```bash
+cd backend
+npm install
+```
+
+---
+
+## Running the Application
+
+⚠️ Both frontend and backend must be running at the same time.
+
+### Start the frontend
+
+```bash
 npm run dev
 ```
 
-### Compile and Minify for Production
+### Start the backend
 
-```sh
-npm run build
+```bash
+cd backend
+npm run dev
 ```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
 npm run lint
 ```

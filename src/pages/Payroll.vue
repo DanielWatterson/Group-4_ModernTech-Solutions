@@ -624,7 +624,7 @@ export default {
 
 /* Modal backdrop */
 .modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: #000000; 
   z-index: 1050;
 }
 
@@ -663,5 +663,25 @@ export default {
   .modal-dialog {
     margin: 1rem;
   }
+}
+
+/* FIX MODAL TRANSPARENCY - ADDED FIX */
+.modal-content,
+.modal-content .bg-light,
+.modal-content .alert-info {
+  background-color: #ffffff !important;
+}
+
+.modal-content .card.bg-light {
+  background-color: #f8f9fa !important;
+}
+
+.modal-content .alert-info {
+  background-color: #d1ecf1 !important;
+}
+
+.modal-backdrop {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
 }
 </style>

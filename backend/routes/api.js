@@ -61,7 +61,7 @@ router.post('/payroll/reset', payrollController.resetPayroll);
 // ========== TIME OFF ROUTES ==========
 router.get('/timeoff', timeoffController.getTimeOffData);
 router.get('/timeoff/balances', timeoffController.getLeaveBalances);
-router.put('/timeoff/requests/:id', timeoffController.updateRequestStatus);
+router.patch('/timeoff/requests/:id', timeoffController.updateRequestStatus);
 router.post('/timeoff/requests', timeoffController.submitRequest);
 router.delete('/timeoff/requests/:id', timeoffController.deleteRequest);
 router.delete('/timeoff/clear-pending', timeoffController.clearPending);

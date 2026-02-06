@@ -173,7 +173,7 @@
                         <td>
                           <div class="d-flex align-items-center">
                             <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
-                                 style="width: 40px; height: 40px;">
+                                style="width: 40px; height: 40px;">
                               {{ getInitials(request.name) }}
                             </div>
                             <div>
@@ -513,72 +513,115 @@ export default {
     },
 
     submitBulkLeave() {
-      const type = this.selectedBulkType;
-      const today = new Date().toISOString().split('T')[0];
-      const selectedEmployees = this.leaveBalances
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
+  const type = this.selectedBulkType;
+  const today = new Date().toISOString().split('T')[0];
+  const selectedEmployees = this.leaveBalances
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 3);
 
-      const newBatch = selectedEmployees.map(employee => ({
-        id: 'temp-' + Date.now() + Math.random(),
-        employeeId: employee.employeeId,
-        name: employee.name,
-        startDate: today,
-        endDate: today,
-        typeOfLeave: type
-      }));
+  // Create TEMPORARY requests (frontend-only)
+  const newBatch = selectedEmployees.map(employee => ({
+    id: 'temp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+    employeeId: employee.employeeId,
+    name: employee.name,
+    startDate: today,
+    endDate: today,
+    typeOfLeave: type,
+    status: 'Pending' // Add status field
+  }));
 
-      this.temporaryRequests = [...this.temporaryRequests, ...newBatch];
-    },
-
+  this.temporaryRequests = [...this.temporaryRequests, ...newBatch];
+},
     async approveRequest(req) {
-      try {
-        const response = await fetch(`${this.apiBase}/timeoff/requests`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            employee_id: req.employeeId,
-            leave_type: req.typeOfLeave,
-            start_date: req.startDate,
-            end_date: req.endDate,
-            reason: "Dashboard Approval",
-            status: 'Approved' // EXPLICITLY SETTING STATUS
-          })
-        });
+  // Check if it's a temporary request (frontend-only)
+  if (req.id.startsWith('temp-')) {
+    // Create a real APPROVED request in database directly
+    try {
+      const response = await fetch(`${this.apiBase}/timeoff/requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employee_id: req.employeeId,
+          leave_type: req.typeOfLeave,
+          start_date: req.startDate,
+          end_date: req.endDate,
+          reason: "Dashboard Approval",
+          status: 'Approved' // IMPORTANT: Set as Approved directly
+        })
+      });
 
-        if (response.ok) {
-          this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
-          await this.fetchData(); // REFRESH UI FROM DB
-        }
-      } catch (err) {
-        alert("Action failed: " + err.message);
+      if (response.ok) {
+        // Remove from temporary list
+        this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
+        // Refresh to show in history
+        await this.fetchData();
       }
-    },
+    } catch (err) {
+      alert("Action failed: " + err.message);
+    }
+  } else {
+    // It's a real database request - update its status
+    try {
+      const response = await fetch(`${this.apiBase}/timeoff/requests/${req.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Approved' })
+      });
 
-    async denyRequest(req) {
-      try {
-        const response = await fetch(`${this.apiBase}/timeoff/requests`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            employee_id: req.employeeId,
-            leave_type: req.typeOfLeave,
-            start_date: req.startDate,
-            end_date: req.endDate,
-            reason: "Dashboard Denial",
-            status: 'Denied' // EXPLICITLY SETTING STATUS
-          })
-        });
-
-        if (response.ok) {
-          this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
-          await this.fetchData(); // REFRESH UI FROM DB
-        }
-      } catch (err) {
-        alert("Action failed: " + err.message);
+      if (response.ok) {
+        // Remove from temporary if it was there
+        this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
+        await this.fetchData();
       }
-    },
+    } catch (err) {
+      alert("Action failed: " + err.message);
+    }
+  }
+},
 
+async denyRequest(req) {
+  // Check if it's a temporary request
+  if (req.id.startsWith('temp-')) {
+    // Create a real DENIED request in database directly
+    try {
+      const response = await fetch(`${this.apiBase}/timeoff/requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employee_id: req.employeeId,
+          leave_type: req.typeOfLeave,
+          start_date: req.startDate,
+          end_date: req.endDate,
+          reason: "Dashboard Denial",
+          status: 'Denied' // IMPORTANT: Set as Denied directly
+        })
+      });
+
+      if (response.ok) {
+        this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
+        await this.fetchData();
+      }
+    } catch (err) {
+      alert("Action failed: " + err.message);
+    }
+  } else {
+    // It's a real database request - update its status
+    try {
+      const response = await fetch(`${this.apiBase}/timeoff/requests/${req.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Denied' })
+      });
+
+      if (response.ok) {
+        this.temporaryRequests = this.temporaryRequests.filter(t => t.id !== req.id);
+        await this.fetchData();
+      }
+    } catch (err) {
+      alert("Action failed: " + err.message);
+    }
+  }
+},
     discardRequest(id) {
       this.temporaryRequests = this.temporaryRequests.filter(req => req.id !== id);
     },

@@ -40,7 +40,7 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone <your-repo-url>
+git clone <repo-url>
 cd <project-root>
 ```
 

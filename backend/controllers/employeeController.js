@@ -18,6 +18,8 @@ exports.getAllEmployees = async (req, res) => {
     }
 };
 
+// GET EMPLOYEE BY ID - if employee cannot be found, then it will return 404 error
+
 exports.getEmployeeById = async (req, res) => {
     try {
         const employee = await Employee.findById(req.params.id);
@@ -39,7 +41,7 @@ exports.getEmployeeById = async (req, res) => {
         });
     }
 };
-// CREATE EMPLOYEE
+// CREATE EMPLOYEE - if employee cannot be created, then it will return 500 error
 exports.createEmployee = async (req, res) => {
     try {
         const employee = await Employee.create(req.body);
@@ -58,7 +60,7 @@ exports.createEmployee = async (req, res) => {
     }
 };
 
-// UPDATE EMPLOYEE
+// UPDATE EMPLOYEE - If the employee cannot be found then no changes will be provided.
 exports.updateEmployee = async (req, res) => {
     try {
         const updated = await Employee.updateById(req.params.id, req.body);
@@ -70,6 +72,7 @@ exports.updateEmployee = async (req, res) => {
             });
         }
 
+        // Responds with a success message if employee is updated
         res.json({
             success: true,
             message: 'Employee updated successfully'

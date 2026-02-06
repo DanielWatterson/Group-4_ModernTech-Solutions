@@ -1,5 +1,4 @@
-DROP DATABASE IF EXISTS `moderntech_hr`;
-CREATE DATABASE `moderntech_hr`;
+CREATE DATABASE IF NOT EXISTS `moderntech_hr`;
 USE `moderntech_hr`;
 
 -- ============================================
@@ -120,6 +119,81 @@ CREATE TABLE `leave_balances` (
   FOREIGN KEY (`employee_id`) REFERENCES `employees`(`employee_id`) ON DELETE CASCADE,
   UNIQUE KEY `unique_employee_balance` (`employee_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `performance_last_update` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `last_updated` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `table_name` VARCHAR(50) NOT NULL DEFAULT 'performance_reviews',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Insert initial record
+INSERT INTO `performance_last_update` (`last_updated`, `table_name`) 
+VALUES (NOW(), 'performance_reviews');
+
+-- ============================================
+-- SIMPLE TRIGGERS TO UPDATE TIMESTAMP
+-- ============================================
+
+-- Update timestamp when performance reviews change
+DELIMITER $$
+CREATE TRIGGER `update_performance_timestamp_insert`
+AFTER INSERT ON `performance_reviews`
+FOR EACH ROW
+BEGIN
+    UPDATE `performance_last_update` 
+    SET `last_updated` = NOW() 
+    WHERE `table_name` = 'performance_reviews';
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER `update_performance_timestamp_update`
+AFTER UPDATE ON `performance_reviews`
+FOR EACH ROW
+BEGIN
+    UPDATE `performance_last_update` 
+    SET `last_updated` = NOW() 
+    WHERE `table_name` = 'performance_reviews';
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER `update_performance_timestamp_delete`
+AFTER DELETE ON `performance_reviews`
+FOR EACH ROW
+BEGIN
+    UPDATE `performance_last_update` 
+    SET `last_updated` = NOW() 
+    WHERE `table_name` = 'performance_reviews';
+END$$
+DELIMITER ;
+
+-- Also track changes to attendance (affects performance)
+DELIMITER $$
+CREATE TRIGGER `update_performance_timestamp_attendance`
+AFTER INSERT ON `attendance`
+FOR EACH ROW
+BEGIN
+    UPDATE `performance_last_update` 
+    SET `last_updated` = NOW() 
+    WHERE `table_name` = 'performance_reviews';
+END$$
+DELIMITER ;
+
+-- Track changes to payroll (affects performance metrics)
+DELIMITER $$
+CREATE TRIGGER `update_performance_timestamp_payroll`
+AFTER UPDATE ON `payroll`
+FOR EACH ROW
+BEGIN
+    IF NEW.is_processed != OLD.is_processed OR NEW.net_pay != OLD.net_pay THEN
+        UPDATE `performance_last_update` 
+        SET `last_updated` = NOW() 
+        WHERE `table_name` = 'performance_reviews';
+    END IF;
+END$$
+DELIMITER ;
 
 -- ============================================
 -- INSERT - EMPLOYEES DATA 
